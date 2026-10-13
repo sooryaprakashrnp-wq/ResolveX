@@ -1,0 +1,289 @@
+{
+  "LoadWorkbook": [
+    {
+      "Name": "in_Path",
+      "Direction": "In",
+      "Type": "String"
+    },
+    {
+      "Name": "out_Table",
+      "Direction": "Out",
+      "Type": "DataTable"
+    }
+  ],
+  "SaveWorkbook": [
+    {
+      "Name": "in_Path",
+      "Direction": "In",
+      "Type": "String"
+    },
+    {
+      "Name": "in_Table",
+      "Direction": "In",
+      "Type": "DataTable"
+    }
+  ],
+  "ReadGmail": [
+    {
+      "Name": "in_ProjectRoot",
+      "Direction": "In",
+      "Type": "String"
+    },
+    {
+      "Name": "in_UseSample",
+      "Direction": "In",
+      "Type": "Boolean"
+    },
+    {
+      "Name": "in_GmailEmails",
+      "Direction": "In",
+      "Type": "Object"
+    },
+    {
+      "Name": "out_Emails",
+      "Direction": "Out",
+      "Type": "Records"
+    }
+  ],
+  "ClassifyComplaint": [
+    {
+      "Name": "in_ProjectRoot",
+      "Direction": "In",
+      "Type": "String"
+    },
+    {
+      "Name": "io_Complaint",
+      "Direction": "In",
+      "Type": "Record"
+    },
+    {
+      "Name": "in_AIEnabled",
+      "Direction": "In",
+      "Type": "Boolean"
+    },
+    {
+      "Name": "in_AIApproved",
+      "Direction": "In",
+      "Type": "Boolean"
+    }
+  ],
+  "DeterminePriority": [
+    {
+      "Name": "io_Complaint",
+      "Direction": "In",
+      "Type": "Record"
+    }
+  ],
+  "FindDepartment": [
+    {
+      "Name": "io_Complaint",
+      "Direction": "In",
+      "Type": "Record"
+    },
+    {
+      "Name": "in_Routing",
+      "Direction": "In",
+      "Type": "DataTable"
+    },
+    {
+      "Name": "in_AuthorizedRecipients",
+      "Direction": "In",
+      "Type": "Records"
+    }
+  ],
+  "GenerateResponse": [
+    {
+      "Name": "io_Complaint",
+      "Direction": "In",
+      "Type": "Record"
+    },
+    {
+      "Name": "in_FAQ",
+      "Direction": "In",
+      "Type": "DataTable"
+    }
+  ],
+  "RouteComplaint": [
+    {
+      "Name": "in_ProjectRoot",
+      "Direction": "In",
+      "Type": "String"
+    },
+    {
+      "Name": "io_Complaint",
+      "Direction": "In",
+      "Type": "Record"
+    },
+    {
+      "Name": "out_Actions",
+      "Direction": "Out",
+      "Type": "Records"
+    }
+  ],
+  "HandleExceptions": [
+    {
+      "Name": "in_ProjectRoot",
+      "Direction": "In",
+      "Type": "String"
+    },
+    {
+      "Name": "io_Complaint",
+      "Direction": "In",
+      "Type": "Record"
+    },
+    {
+      "Name": "in_Error",
+      "Direction": "In",
+      "Type": "Exception"
+    }
+  ],
+  "LogComplaint": [
+    {
+      "Name": "in_ProjectRoot",
+      "Direction": "In",
+      "Type": "String"
+    },
+    {
+      "Name": "io_Complaint",
+      "Direction": "In",
+      "Type": "Record"
+    },
+    {
+      "Name": "in_Log",
+      "Direction": "InOut",
+      "Type": "DataTable"
+    }
+  ],
+  "GeneratePriorityReport": [
+    {
+      "Name": "in_Log",
+      "Direction": "In",
+      "Type": "DataTable"
+    },
+    {
+      "Name": "out_Report",
+      "Direction": "Out",
+      "Type": "DataTable"
+    }
+  ],
+  "SendGmail": [
+    {
+      "Name": "in_ProjectRoot",
+      "Direction": "In",
+      "Type": "String"
+    },
+    {
+      "Name": "in_Action",
+      "Direction": "In",
+      "Type": "Record"
+    },
+    {
+      "Name": "in_SendEnabled",
+      "Direction": "In",
+      "Type": "Boolean"
+    },
+    {
+      "Name": "out_SendStatus",
+      "Direction": "Out",
+      "Type": "String"
+    }
+  ],
+  "ApproveAction": [
+    {
+      "Name": "in_ProjectRoot",
+      "Direction": "In",
+      "Type": "String"
+    },
+    {
+      "Name": "in_Action",
+      "Direction": "In",
+      "Type": "Record"
+    },
+    {
+      "Name": "in_SendEnabled",
+      "Direction": "In",
+      "Type": "Boolean"
+    },
+    {
+      "Name": "out_Approved",
+      "Direction": "Out",
+      "Type": "Boolean"
+    }
+  ],
+  "TrackDispatch": [
+    {
+      "Name": "in_ProjectRoot",
+      "Direction": "In",
+      "Type": "String"
+    },
+    {
+      "Name": "in_Action",
+      "Direction": "In",
+      "Type": "Record"
+    },
+    {
+      "Name": "in_Status",
+      "Direction": "In",
+      "Type": "String"
+    },
+    {
+      "Name": "out_Skip",
+      "Direction": "Out",
+      "Type": "Boolean"
+    }
+  ],
+  "DispatchActions": [
+    {
+      "Name": "in_ProjectRoot",
+      "Direction": "In",
+      "Type": "String"
+    },
+    {
+      "Name": "io_Complaint",
+      "Direction": "In",
+      "Type": "Record"
+    },
+    {
+      "Name": "in_Actions",
+      "Direction": "In",
+      "Type": "Records"
+    },
+    {
+      "Name": "in_SendEnabled",
+      "Direction": "In",
+      "Type": "Boolean"
+    }
+  ],
+  "Main": [
+    {
+      "Name": "in_ProjectRoot",
+      "Direction": "In",
+      "Type": "String"
+    },
+    {
+      "Name": "in_UseSample",
+      "Direction": "In",
+      "Type": "Boolean"
+    },
+    {
+      "Name": "in_GmailEmails",
+      "Direction": "In",
+      "Type": "Object"
+    },
+    {
+      "Name": "in_SendEnabled",
+      "Direction": "In",
+      "Type": "Boolean"
+    },
+    {
+      "Name": "in_AIEnabled",
+      "Direction": "In",
+      "Type": "Boolean"
+    },
+    {
+      "Name": "in_AIApproved",
+      "Direction": "In",
+      "Type": "Boolean"
+    }
+  ]
+}
