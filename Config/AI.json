@@ -1,0 +1,5 @@
+{
+  "Endpoint": "",
+  "ApiKeyEnvironmentVariable": "RESOLVEX_AI_KEY",
+  "ConfidenceThreshold": 0.75
+}

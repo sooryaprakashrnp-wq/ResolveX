@@ -1,0 +1,79 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "Organization",
+    "Category",
+    "Department",
+    "Sentiment",
+    "Priority",
+    "Confidence",
+    "Summary",
+    "SuggestedResponse"
+  ],
+  "properties": {
+    "Organization": {
+      "enum": [
+        "Flipkart",
+        "Amazon",
+        "Samsung",
+        "Airtel",
+        "Jio",
+        "Swiggy",
+        "Zomato",
+        "Meesho"
+      ]
+    },
+    "Category": {
+      "enum": [
+        "Order/Delivery",
+        "Warranty",
+        "Refund",
+        "Returns",
+        "Technical",
+        "Billing"
+      ]
+    },
+    "Department": {
+      "enum": [
+        "Order Support",
+        "Delivery and Logistics",
+        "Warranty and Service",
+        "Returns and Replacement",
+        "Payments and Refunds",
+        "Technical Support",
+        "Billing Support",
+        "Customer Service",
+        "Escalation Team"
+      ]
+    },
+    "Sentiment": {
+      "enum": [
+        "Positive",
+        "Neutral",
+        "Negative"
+      ]
+    },
+    "Priority": {
+      "enum": [
+        "Critical",
+        "High",
+        "Medium",
+        "Low"
+      ]
+    },
+    "Confidence": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1
+    },
+    "Summary": {
+      "type": "string",
+      "maxLength": 1000
+    },
+    "SuggestedResponse": {
+      "type": "string",
+      "maxLength": 3000
+    }
+  }
+}
