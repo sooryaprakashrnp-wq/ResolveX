@@ -1,0 +1,46 @@
+<?xml version="1.0" ?>
+<Activity xmlns="http://schemas.microsoft.com/netfx/2009/xaml/activities" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:ui="http://schemas.uipath.com/workflow/activities" xmlns:scg="clr-namespace:System.Collections.Generic;assembly=System.Private.CoreLib" xmlns:sd="clr-namespace:System.Data;assembly=System.Data.Common" xmlns:s="clr-namespace:System;assembly=System.Private.CoreLib" xmlns:sco="clr-namespace:System.Collections.ObjectModel;assembly=System.Private.CoreLib" x:Class="ResolveX_RouteComplaint">
+  <x:Members>
+    <x:Property Name="in_ProjectRoot" Type="InArgument(x:String)"/>
+    <x:Property Name="io_Complaint" Type="InArgument(scg:Dictionary(x:String, x:String))"/>
+    <x:Property Name="out_Actions" Type="OutArgument(scg:List(scg:Dictionary(x:String, x:String)))"/>
+  </x:Members>
+  <TextExpression.NamespacesForImplementation>
+    <sco:Collection x:TypeArguments="x:String">
+      <x:String>System</x:String>
+      <x:String>System.Data</x:String>
+      <x:String>System.Collections.Generic</x:String>
+      <x:String>System.Linq</x:String>
+      <x:String>System.IO</x:String>
+      <x:String>System.Text.Json</x:String>
+    </sco:Collection>
+  </TextExpression.NamespacesForImplementation>
+  <TextExpression.ReferencesForImplementation>
+    <sco:Collection x:TypeArguments="AssemblyReference">
+      <AssemblyReference>System.Private.CoreLib</AssemblyReference>
+      <AssemblyReference>System.Data.Common</AssemblyReference>
+      <AssemblyReference>System.Linq</AssemblyReference>
+      <AssemblyReference>System.Text.Json</AssemblyReference>
+      <AssemblyReference>System.IO.Compression</AssemblyReference>
+      <AssemblyReference>System.IO.Compression.ZipFile</AssemblyReference>
+      <AssemblyReference>System.Xml.XDocument</AssemblyReference>
+      <AssemblyReference>System.Net.Http</AssemblyReference>
+      <AssemblyReference>System.Net.Mail</AssemblyReference>
+      <AssemblyReference>System.Net.Primitives</AssemblyReference>
+      <AssemblyReference>System.Security.Cryptography</AssemblyReference>
+      <AssemblyReference>System.Text.RegularExpressions</AssemblyReference>
+      <AssemblyReference>System.Runtime</AssemblyReference>
+      <AssemblyReference>System.Collections</AssemblyReference>
+      <AssemblyReference>Microsoft.VisualBasic.Core</AssemblyReference>
+    </sco:Collection>
+  </TextExpression.ReferencesForImplementation>
+  <Sequence DisplayName="RouteComplaint">
+    <ui:InvokeCode DisplayName="RouteComplaint" Language="VBNet" Code="out_Actions = New System.Collections.Generic.List(Of System.Collections.Generic.Dictionary(Of String,String))() Dim targets As New System.Collections.Generic.Dictionary(Of String,String)(StringComparer.OrdinalIgnoreCase) If io_Complaint(&quot;Status&quot;) &lt;&gt; &quot;ManualReview&quot; AndAlso io_Complaint(&quot;Status&quot;) &lt;&gt; &quot;RouteUnconfigured&quot; AndAlso io_Complaint(&quot;DepartmentEmail&quot;) &lt;&gt; &quot;&quot; Then targets(io_Complaint(&quot;DepartmentEmail&quot;)) = &quot;Department&quot; If io_Complaint(&quot;EscalationRequired&quot;) = &quot;True&quot; AndAlso io_Complaint(&quot;EscalationEmail&quot;) &lt;&gt; &quot;&quot; Then targets(io_Complaint(&quot;EscalationEmail&quot;)) = &quot;Escalation&quot; If io_Complaint(&quot;Status&quot;) = &quot;ManualReview&quot; Then  targets.Clear()  ' A central manual-review recipient must explicitly allow this organization, including Unknown.  Dim path = System.IO.Path.Combine(in_ProjectRoot,&quot;Config&quot;,&quot;ManualReviewRecipients.json&quot;)  If System.IO.File.Exists(path) Then   Dim list = System.Text.Json.JsonSerializer.Deserialize(Of System.Collections.Generic.List(Of System.Collections.Generic.Dictionary(Of String,String)))(System.IO.File.ReadAllText(path))   For Each item In list    If item(&quot;Organization&quot;) = io_Complaint(&quot;Organization&quot;) Then targets(item(&quot;Email&quot;)) = &quot;ManualReview&quot;   Next  End If End If For Each kv In targets  Dim a As New System.Collections.Generic.Dictionary(Of String,String) From {   {&quot;ActionID&quot;,io_Complaint(&quot;TicketID&quot;) &amp; &quot;-&quot; &amp; kv.Value}, {&quot;Organization&quot;,io_Complaint(&quot;Organization&quot;)}, {&quot;To&quot;,kv.Key},   {&quot;Subject&quot;,&quot;[&quot; &amp; io_Complaint(&quot;TicketID&quot;) &amp; &quot;] &quot; &amp; io_Complaint(&quot;Priority&quot;) &amp; &quot; &quot; &amp; io_Complaint(&quot;Organization&quot;) &amp; &quot; &quot; &amp; io_Complaint(&quot;Category&quot;)},   {&quot;Body&quot;,&quot;Ticket: &quot; &amp; io_Complaint(&quot;TicketID&quot;) &amp; Environment.NewLine &amp; &quot;Customer: &quot; &amp; io_Complaint(&quot;CustomerEmail&quot;) &amp; Environment.NewLine &amp; &quot;Received: &quot; &amp; io_Complaint(&quot;ReceivedDate&quot;) &amp; Environment.NewLine &amp; &quot;Category: &quot; &amp; io_Complaint(&quot;Category&quot;) &amp; Environment.NewLine &amp; &quot;Sentiment: &quot; &amp; io_Complaint(&quot;Sentiment&quot;) &amp; Environment.NewLine &amp; &quot;Complaint:&quot; &amp; Environment.NewLine &amp; io_Complaint(&quot;ComplaintText&quot;) &amp; Environment.NewLine &amp; Environment.NewLine &amp; &quot;Approved FAQ recommendation:&quot; &amp; Environment.NewLine &amp; io_Complaint(&quot;SuggestedResponse&quot;)},   {&quot;Kind&quot;,kv.Value}}  Using sha As System.Security.Cryptography.SHA256 = System.Security.Cryptography.SHA256.Create()   a(&quot;ActionID&quot;) &amp;= &quot;-&quot; &amp; BitConverter.ToString(sha.ComputeHash(System.Text.Encoding.UTF8.GetBytes(kv.Key.ToLowerInvariant()))).Replace(&quot;-&quot;, &quot;&quot;).Substring(0,8)  End Using  out_Actions.Add(a) Next Dim folder = System.IO.Path.Combine(in_ProjectRoot,&quot;Output&quot;,&quot;Drafts&quot;) System.IO.Directory.CreateDirectory(folder) System.IO.File.WriteAllText(System.IO.Path.Combine(folder,io_Complaint(&quot;TicketID&quot;) &amp; &quot;.json&quot;),System.Text.Json.JsonSerializer.Serialize(out_Actions)) If io_Complaint(&quot;Status&quot;) = &quot;New&quot; Then io_Complaint(&quot;Status&quot;) = &quot;DryRun&quot; ">
+      <ui:InvokeCode.Arguments>
+        <InArgument x:TypeArguments="x:String" x:Key="in_ProjectRoot">[in_ProjectRoot]</InArgument>
+        <InArgument x:TypeArguments="scg:Dictionary(x:String, x:String)" x:Key="io_Complaint">[io_Complaint]</InArgument>
+        <OutArgument x:TypeArguments="scg:List(scg:Dictionary(x:String, x:String))" x:Key="out_Actions">[out_Actions]</OutArgument>
+      </ui:InvokeCode.Arguments>
+    </ui:InvokeCode>
+  </Sequence>
+</Activity>

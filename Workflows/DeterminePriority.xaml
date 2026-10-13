@@ -1,0 +1,42 @@
+<?xml version="1.0" ?>
+<Activity xmlns="http://schemas.microsoft.com/netfx/2009/xaml/activities" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:ui="http://schemas.uipath.com/workflow/activities" xmlns:scg="clr-namespace:System.Collections.Generic;assembly=System.Private.CoreLib" xmlns:sd="clr-namespace:System.Data;assembly=System.Data.Common" xmlns:s="clr-namespace:System;assembly=System.Private.CoreLib" xmlns:sco="clr-namespace:System.Collections.ObjectModel;assembly=System.Private.CoreLib" x:Class="ResolveX_DeterminePriority">
+  <x:Members>
+    <x:Property Name="io_Complaint" Type="InArgument(scg:Dictionary(x:String, x:String))"/>
+  </x:Members>
+  <TextExpression.NamespacesForImplementation>
+    <sco:Collection x:TypeArguments="x:String">
+      <x:String>System</x:String>
+      <x:String>System.Data</x:String>
+      <x:String>System.Collections.Generic</x:String>
+      <x:String>System.Linq</x:String>
+      <x:String>System.IO</x:String>
+      <x:String>System.Text.Json</x:String>
+    </sco:Collection>
+  </TextExpression.NamespacesForImplementation>
+  <TextExpression.ReferencesForImplementation>
+    <sco:Collection x:TypeArguments="AssemblyReference">
+      <AssemblyReference>System.Private.CoreLib</AssemblyReference>
+      <AssemblyReference>System.Data.Common</AssemblyReference>
+      <AssemblyReference>System.Linq</AssemblyReference>
+      <AssemblyReference>System.Text.Json</AssemblyReference>
+      <AssemblyReference>System.IO.Compression</AssemblyReference>
+      <AssemblyReference>System.IO.Compression.ZipFile</AssemblyReference>
+      <AssemblyReference>System.Xml.XDocument</AssemblyReference>
+      <AssemblyReference>System.Net.Http</AssemblyReference>
+      <AssemblyReference>System.Net.Mail</AssemblyReference>
+      <AssemblyReference>System.Net.Primitives</AssemblyReference>
+      <AssemblyReference>System.Security.Cryptography</AssemblyReference>
+      <AssemblyReference>System.Text.RegularExpressions</AssemblyReference>
+      <AssemblyReference>System.Runtime</AssemblyReference>
+      <AssemblyReference>System.Collections</AssemblyReference>
+      <AssemblyReference>Microsoft.VisualBasic.Core</AssemblyReference>
+    </sco:Collection>
+  </TextExpression.ReferencesForImplementation>
+  <Sequence DisplayName="DeterminePriority">
+    <ui:InvokeCode DisplayName="DeterminePriority" Language="VBNet" Code="Dim text = (io_Complaint(&quot;Subject&quot;) &amp; &quot; &quot; &amp; io_Complaint(&quot;ComplaintText&quot;)).ToLowerInvariant() Dim matches As Func(Of String, Boolean) = Function(pattern) System.Text.RegularExpressions.Regex.IsMatch(text, pattern) Dim rulePriority As String = &quot;Medium&quot; If matches(&quot;\b(fraud|unauthori[sz]ed transaction|security breach|account compromis(?:e|ed)|immediate safety risk|fire|electric shock)\b&quot;) Then  rulePriority = &quot;Critical&quot; ElseIf matches(&quot;\b(urgent|significant payment failure|repeated|unresolved|major service disruption|network outage|payment deducted|failed transaction)\b&quot;) Then  rulePriority = &quot;High&quot; ElseIf matches(&quot;\b(thank(?:s| you)|appreciate|resolved|happy)\b&quot;) AndAlso Not matches(&quot;\b(not|refund|problem|broken|damaged|failed)\b&quot;) Then  rulePriority = &quot;Low&quot; End If Dim order As String() = {&quot;Low&quot;,&quot;Medium&quot;,&quot;High&quot;,&quot;Critical&quot;} If String.IsNullOrWhiteSpace(io_Complaint(&quot;Priority&quot;)) OrElse Array.IndexOf(order, rulePriority) &gt; Array.IndexOf(order, io_Complaint(&quot;Priority&quot;)) Then io_Complaint(&quot;Priority&quot;) = rulePriority If String.IsNullOrWhiteSpace(io_Complaint(&quot;Sentiment&quot;)) Then  If matches(&quot;\b(not|failed|angry|disappointed|damaged|broken|fraud|stopped|missing|delayed|unresolved|terrible|worst)\b&quot;) Then   io_Complaint(&quot;Sentiment&quot;) = &quot;Negative&quot;  ElseIf matches(&quot;\b(thank(?:s| you)|appreciate|happy|great|resolved)\b&quot;) Then   io_Complaint(&quot;Sentiment&quot;) = &quot;Positive&quot;  Else   io_Complaint(&quot;Sentiment&quot;) = &quot;Neutral&quot;  End If End If io_Complaint(&quot;EscalationRequired&quot;) = If(io_Complaint(&quot;Priority&quot;) = &quot;Critical&quot; OrElse io_Complaint(&quot;Priority&quot;) = &quot;High&quot; OrElse io_Complaint(&quot;Status&quot;) = &quot;ManualReview&quot;, &quot;True&quot;, &quot;False&quot;)">
+      <ui:InvokeCode.Arguments>
+        <InArgument x:TypeArguments="scg:Dictionary(x:String, x:String)" x:Key="io_Complaint">[io_Complaint]</InArgument>
+      </ui:InvokeCode.Arguments>
+    </ui:InvokeCode>
+  </Sequence>
+</Activity>

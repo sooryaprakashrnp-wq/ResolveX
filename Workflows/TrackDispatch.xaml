@@ -1,0 +1,48 @@
+<?xml version="1.0" ?>
+<Activity xmlns="http://schemas.microsoft.com/netfx/2009/xaml/activities" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:ui="http://schemas.uipath.com/workflow/activities" xmlns:scg="clr-namespace:System.Collections.Generic;assembly=System.Private.CoreLib" xmlns:sd="clr-namespace:System.Data;assembly=System.Data.Common" xmlns:s="clr-namespace:System;assembly=System.Private.CoreLib" xmlns:sco="clr-namespace:System.Collections.ObjectModel;assembly=System.Private.CoreLib" x:Class="ResolveX_TrackDispatch">
+  <x:Members>
+    <x:Property Name="in_ProjectRoot" Type="InArgument(x:String)"/>
+    <x:Property Name="in_Action" Type="InArgument(scg:Dictionary(x:String, x:String))"/>
+    <x:Property Name="in_Status" Type="InArgument(x:String)"/>
+    <x:Property Name="out_Skip" Type="OutArgument(x:Boolean)"/>
+  </x:Members>
+  <TextExpression.NamespacesForImplementation>
+    <sco:Collection x:TypeArguments="x:String">
+      <x:String>System</x:String>
+      <x:String>System.Data</x:String>
+      <x:String>System.Collections.Generic</x:String>
+      <x:String>System.Linq</x:String>
+      <x:String>System.IO</x:String>
+      <x:String>System.Text.Json</x:String>
+    </sco:Collection>
+  </TextExpression.NamespacesForImplementation>
+  <TextExpression.ReferencesForImplementation>
+    <sco:Collection x:TypeArguments="AssemblyReference">
+      <AssemblyReference>System.Private.CoreLib</AssemblyReference>
+      <AssemblyReference>System.Data.Common</AssemblyReference>
+      <AssemblyReference>System.Linq</AssemblyReference>
+      <AssemblyReference>System.Text.Json</AssemblyReference>
+      <AssemblyReference>System.IO.Compression</AssemblyReference>
+      <AssemblyReference>System.IO.Compression.ZipFile</AssemblyReference>
+      <AssemblyReference>System.Xml.XDocument</AssemblyReference>
+      <AssemblyReference>System.Net.Http</AssemblyReference>
+      <AssemblyReference>System.Net.Mail</AssemblyReference>
+      <AssemblyReference>System.Net.Primitives</AssemblyReference>
+      <AssemblyReference>System.Security.Cryptography</AssemblyReference>
+      <AssemblyReference>System.Text.RegularExpressions</AssemblyReference>
+      <AssemblyReference>System.Runtime</AssemblyReference>
+      <AssemblyReference>System.Collections</AssemblyReference>
+      <AssemblyReference>Microsoft.VisualBasic.Core</AssemblyReference>
+    </sco:Collection>
+  </TextExpression.ReferencesForImplementation>
+  <Sequence DisplayName="TrackDispatch">
+    <ui:InvokeCode DisplayName="TrackDispatch" Language="VBNet" Code="Dim dir = System.IO.Path.Combine(in_ProjectRoot,&quot;State&quot;,&quot;Dispatch&quot;) System.IO.Directory.CreateDirectory(dir) Dim path = System.IO.Path.Combine(dir,in_Action(&quot;ActionID&quot;) &amp; &quot;.json&quot;) out_Skip = False If System.IO.File.Exists(path) Then  Dim saved = System.Text.Json.JsonSerializer.Deserialize(Of System.Collections.Generic.Dictionary(Of String,String))(System.IO.File.ReadAllText(path))  If in_Status = &quot;Sending&quot; AndAlso New String(){&quot;Sending&quot;,&quot;Uncertain&quot;}.Contains(saved(&quot;Status&quot;)) Then Throw New InvalidOperationException(&quot;Manual reconciliation required for prior uncertain attempt&quot;)  out_Skip = saved(&quot;Status&quot;) = &quot;Sent&quot; End If If in_Status = &quot;Sending&quot; AndAlso out_Skip Then Return Dim item As New System.Collections.Generic.Dictionary(Of String,String) From {{&quot;ActionID&quot;,in_Action(&quot;ActionID&quot;)},{&quot;Status&quot;,in_Status},{&quot;Utc&quot;,DateTime.UtcNow.ToString(&quot;o&quot;)}} Dim temp = path &amp; &quot;.tmp&quot; System.IO.File.WriteAllText(temp,System.Text.Json.JsonSerializer.Serialize(item)) If System.IO.File.Exists(path) Then System.IO.File.Replace(temp,path,path &amp; &quot;.bak&quot;,True) Else System.IO.File.Move(temp,path)">
+      <ui:InvokeCode.Arguments>
+        <InArgument x:TypeArguments="x:String" x:Key="in_ProjectRoot">[in_ProjectRoot]</InArgument>
+        <InArgument x:TypeArguments="scg:Dictionary(x:String, x:String)" x:Key="in_Action">[in_Action]</InArgument>
+        <InArgument x:TypeArguments="x:String" x:Key="in_Status">[in_Status]</InArgument>
+        <OutArgument x:TypeArguments="x:Boolean" x:Key="out_Skip">[out_Skip]</OutArgument>
+      </ui:InvokeCode.Arguments>
+    </ui:InvokeCode>
+  </Sequence>
+</Activity>

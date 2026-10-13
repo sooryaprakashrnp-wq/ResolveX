@@ -1,0 +1,140 @@
+<?xml version="1.0" ?>
+<Activity xmlns="http://schemas.microsoft.com/netfx/2009/xaml/activities" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:ui="http://schemas.uipath.com/workflow/activities" xmlns:scg="clr-namespace:System.Collections.Generic;assembly=System.Private.CoreLib" xmlns:sd="clr-namespace:System.Data;assembly=System.Data.Common" xmlns:s="clr-namespace:System;assembly=System.Private.CoreLib" xmlns:sco="clr-namespace:System.Collections.ObjectModel;assembly=System.Private.CoreLib" x:Class="ResolveX_DispatchActions">
+  <x:Members>
+    <x:Property Name="in_ProjectRoot" Type="InArgument(x:String)"/>
+    <x:Property Name="io_Complaint" Type="InArgument(scg:Dictionary(x:String, x:String))"/>
+    <x:Property Name="in_Actions" Type="InArgument(scg:List(scg:Dictionary(x:String, x:String)))"/>
+    <x:Property Name="in_SendEnabled" Type="InArgument(x:Boolean)"/>
+  </x:Members>
+  <TextExpression.NamespacesForImplementation>
+    <sco:Collection x:TypeArguments="x:String">
+      <x:String>System</x:String>
+      <x:String>System.Data</x:String>
+      <x:String>System.Collections.Generic</x:String>
+      <x:String>System.Linq</x:String>
+      <x:String>System.IO</x:String>
+      <x:String>System.Text.Json</x:String>
+    </sco:Collection>
+  </TextExpression.NamespacesForImplementation>
+  <TextExpression.ReferencesForImplementation>
+    <sco:Collection x:TypeArguments="AssemblyReference">
+      <AssemblyReference>System.Private.CoreLib</AssemblyReference>
+      <AssemblyReference>System.Data.Common</AssemblyReference>
+      <AssemblyReference>System.Linq</AssemblyReference>
+      <AssemblyReference>System.Text.Json</AssemblyReference>
+      <AssemblyReference>System.IO.Compression</AssemblyReference>
+      <AssemblyReference>System.IO.Compression.ZipFile</AssemblyReference>
+      <AssemblyReference>System.Xml.XDocument</AssemblyReference>
+      <AssemblyReference>System.Net.Http</AssemblyReference>
+      <AssemblyReference>System.Net.Mail</AssemblyReference>
+      <AssemblyReference>System.Net.Primitives</AssemblyReference>
+      <AssemblyReference>System.Security.Cryptography</AssemblyReference>
+      <AssemblyReference>System.Text.RegularExpressions</AssemblyReference>
+      <AssemblyReference>System.Runtime</AssemblyReference>
+      <AssemblyReference>System.Collections</AssemblyReference>
+      <AssemblyReference>Microsoft.VisualBasic.Core</AssemblyReference>
+    </sco:Collection>
+  </TextExpression.ReferencesForImplementation>
+  <Sequence DisplayName="DispatchActions">
+    <Sequence.Variables>
+      <Variable x:TypeArguments="x:Boolean" Name="approved"/>
+      <Variable x:TypeArguments="x:Boolean" Name="skip"/>
+      <Variable x:TypeArguments="x:String" Name="sendStatus"/>
+    </Sequence.Variables>
+    <If Condition="[in_SendEnabled AndAlso in_Actions.Count &gt; 0]" DisplayName="Sending explicitly enabled with prepared actions">
+      <If.Then>
+        <Sequence>
+          <ui:InvokeCode DisplayName="Require native sender adapter binding" Language="VBNet" Code="If Not System.IO.File.Exists(System.IO.Path.Combine(in_ProjectRoot, &quot;Config&quot;, &quot;SenderBound.flag&quot;)) Then Throw New InvalidOperationException(&quot;Bind native Gmail adapter first. No send was attempted.&quot;)">
+            <ui:InvokeCode.Arguments>
+              <InArgument x:TypeArguments="x:String" x:Key="in_ProjectRoot">[in_ProjectRoot]</InArgument>
+            </ui:InvokeCode.Arguments>
+          </ui:InvokeCode>
+          <ui:ForEach x:TypeArguments="scg:Dictionary(x:String, x:String)" Values="[in_Actions]" DisplayName="Review and send each authorized notification">
+            <ui:ForEach.Body>
+              <ActivityAction x:TypeArguments="scg:Dictionary(x:String, x:String)">
+                <ActivityAction.Argument>
+                  <DelegateInArgument x:TypeArguments="scg:Dictionary(x:String, x:String)" Name="action"/>
+                </ActivityAction.Argument>
+                <Sequence>
+                  <ui:InvokeWorkflowFile DisplayName="ApproveAction" WorkflowFileName="[System.IO.Path.Combine(in_ProjectRoot, &quot;Workflows&quot;, &quot;ApproveAction.xaml&quot;)]">
+                    <ui:InvokeWorkflowFile.Arguments>
+                      <InArgument x:TypeArguments="x:String" x:Key="in_ProjectRoot">[in_ProjectRoot]</InArgument>
+                      <InArgument x:TypeArguments="scg:Dictionary(x:String, x:String)" x:Key="in_Action">[action]</InArgument>
+                      <InArgument x:TypeArguments="x:Boolean" x:Key="in_SendEnabled">[in_SendEnabled]</InArgument>
+                      <OutArgument x:TypeArguments="x:Boolean" x:Key="out_Approved">[approved]</OutArgument>
+                    </ui:InvokeWorkflowFile.Arguments>
+                  </ui:InvokeWorkflowFile>
+                  <ui:InvokeWorkflowFile DisplayName="TrackDispatch" WorkflowFileName="[System.IO.Path.Combine(in_ProjectRoot, &quot;Workflows&quot;, &quot;TrackDispatch.xaml&quot;)]">
+                    <ui:InvokeWorkflowFile.Arguments>
+                      <InArgument x:TypeArguments="x:String" x:Key="in_ProjectRoot">[in_ProjectRoot]</InArgument>
+                      <InArgument x:TypeArguments="scg:Dictionary(x:String, x:String)" x:Key="in_Action">[action]</InArgument>
+                      <InArgument x:TypeArguments="x:String" x:Key="in_Status">[&quot;Sending&quot;]</InArgument>
+                      <OutArgument x:TypeArguments="x:Boolean" x:Key="out_Skip">[skip]</OutArgument>
+                    </ui:InvokeWorkflowFile.Arguments>
+                  </ui:InvokeWorkflowFile>
+                  <If Condition="[Not skip]">
+                    <If.Then>
+                      <TryCatch>
+                        <TryCatch.Try>
+                          <Sequence>
+                            <ui:InvokeWorkflowFile DisplayName="SendGmail" WorkflowFileName="[System.IO.Path.Combine(in_ProjectRoot, &quot;Workflows&quot;, &quot;SendGmail.xaml&quot;)]">
+                              <ui:InvokeWorkflowFile.Arguments>
+                                <InArgument x:TypeArguments="x:String" x:Key="in_ProjectRoot">[in_ProjectRoot]</InArgument>
+                                <InArgument x:TypeArguments="scg:Dictionary(x:String, x:String)" x:Key="in_Action">[action]</InArgument>
+                                <InArgument x:TypeArguments="x:Boolean" x:Key="in_SendEnabled">[in_SendEnabled]</InArgument>
+                                <OutArgument x:TypeArguments="x:String" x:Key="out_SendStatus">[sendStatus]</OutArgument>
+                              </ui:InvokeWorkflowFile.Arguments>
+                            </ui:InvokeWorkflowFile>
+                            <ui:InvokeCode DisplayName="Require confirmed successful send" Language="VBNet" Code="If sendStatus &lt;&gt; &quot;Sent&quot; Then Throw New InvalidOperationException(&quot;Gmail sending did not report Sent&quot;)">
+                              <ui:InvokeCode.Arguments>
+                                <InArgument x:TypeArguments="x:String" x:Key="sendStatus">[sendStatus]</InArgument>
+                              </ui:InvokeCode.Arguments>
+                            </ui:InvokeCode>
+                            <ui:InvokeWorkflowFile DisplayName="TrackDispatch" WorkflowFileName="[System.IO.Path.Combine(in_ProjectRoot, &quot;Workflows&quot;, &quot;TrackDispatch.xaml&quot;)]">
+                              <ui:InvokeWorkflowFile.Arguments>
+                                <InArgument x:TypeArguments="x:String" x:Key="in_ProjectRoot">[in_ProjectRoot]</InArgument>
+                                <InArgument x:TypeArguments="scg:Dictionary(x:String, x:String)" x:Key="in_Action">[action]</InArgument>
+                                <InArgument x:TypeArguments="x:String" x:Key="in_Status">[&quot;Sent&quot;]</InArgument>
+                                <OutArgument x:TypeArguments="x:Boolean" x:Key="out_Skip">[skip]</OutArgument>
+                              </ui:InvokeWorkflowFile.Arguments>
+                            </ui:InvokeWorkflowFile>
+                          </Sequence>
+                        </TryCatch.Try>
+                        <TryCatch.Catches>
+                          <Catch x:TypeArguments="s:Exception">
+                            <ActivityAction x:TypeArguments="s:Exception">
+                              <ActivityAction.Argument>
+                                <DelegateInArgument x:TypeArguments="s:Exception" Name="sendError"/>
+                              </ActivityAction.Argument>
+                              <Sequence>
+                                <ui:InvokeWorkflowFile DisplayName="TrackDispatch" WorkflowFileName="[System.IO.Path.Combine(in_ProjectRoot, &quot;Workflows&quot;, &quot;TrackDispatch.xaml&quot;)]">
+                                  <ui:InvokeWorkflowFile.Arguments>
+                                    <InArgument x:TypeArguments="x:String" x:Key="in_ProjectRoot">[in_ProjectRoot]</InArgument>
+                                    <InArgument x:TypeArguments="scg:Dictionary(x:String, x:String)" x:Key="in_Action">[action]</InArgument>
+                                    <InArgument x:TypeArguments="x:String" x:Key="in_Status">[&quot;Uncertain&quot;]</InArgument>
+                                    <OutArgument x:TypeArguments="x:Boolean" x:Key="out_Skip">[skip]</OutArgument>
+                                  </ui:InvokeWorkflowFile.Arguments>
+                                </ui:InvokeWorkflowFile>
+                                <Rethrow/>
+                              </Sequence>
+                            </ActivityAction>
+                          </Catch>
+                        </TryCatch.Catches>
+                      </TryCatch>
+                    </If.Then>
+                  </If>
+                </Sequence>
+              </ActivityAction>
+            </ui:ForEach.Body>
+          </ui:ForEach>
+          <ui:InvokeCode DisplayName="Mark complaint only after successful actions" Language="VBNet" Code="If in_Actions.Count &gt; 0 Then  io_Complaint(&quot;Status&quot;) = &quot;Sent&quot;  io_Complaint(&quot;ForwardedDate&quot;) = DateTime.UtcNow.ToString(&quot;o&quot;) End If">
+            <ui:InvokeCode.Arguments>
+              <InArgument x:TypeArguments="scg:Dictionary(x:String, x:String)" x:Key="io_Complaint">[io_Complaint]</InArgument>
+              <InArgument x:TypeArguments="scg:List(scg:Dictionary(x:String, x:String))" x:Key="in_Actions">[in_Actions]</InArgument>
+            </ui:InvokeCode.Arguments>
+          </ui:InvokeCode>
+        </Sequence>
+      </If.Then>
+    </If>
+  </Sequence>
+</Activity>

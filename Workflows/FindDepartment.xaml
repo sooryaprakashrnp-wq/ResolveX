@@ -1,0 +1,46 @@
+<?xml version="1.0" ?>
+<Activity xmlns="http://schemas.microsoft.com/netfx/2009/xaml/activities" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:ui="http://schemas.uipath.com/workflow/activities" xmlns:scg="clr-namespace:System.Collections.Generic;assembly=System.Private.CoreLib" xmlns:sd="clr-namespace:System.Data;assembly=System.Data.Common" xmlns:s="clr-namespace:System;assembly=System.Private.CoreLib" xmlns:sco="clr-namespace:System.Collections.ObjectModel;assembly=System.Private.CoreLib" x:Class="ResolveX_FindDepartment">
+  <x:Members>
+    <x:Property Name="io_Complaint" Type="InArgument(scg:Dictionary(x:String, x:String))"/>
+    <x:Property Name="in_Routing" Type="InArgument(sd:DataTable)"/>
+    <x:Property Name="in_AuthorizedRecipients" Type="InArgument(scg:List(scg:Dictionary(x:String, x:String)))"/>
+  </x:Members>
+  <TextExpression.NamespacesForImplementation>
+    <sco:Collection x:TypeArguments="x:String">
+      <x:String>System</x:String>
+      <x:String>System.Data</x:String>
+      <x:String>System.Collections.Generic</x:String>
+      <x:String>System.Linq</x:String>
+      <x:String>System.IO</x:String>
+      <x:String>System.Text.Json</x:String>
+    </sco:Collection>
+  </TextExpression.NamespacesForImplementation>
+  <TextExpression.ReferencesForImplementation>
+    <sco:Collection x:TypeArguments="AssemblyReference">
+      <AssemblyReference>System.Private.CoreLib</AssemblyReference>
+      <AssemblyReference>System.Data.Common</AssemblyReference>
+      <AssemblyReference>System.Linq</AssemblyReference>
+      <AssemblyReference>System.Text.Json</AssemblyReference>
+      <AssemblyReference>System.IO.Compression</AssemblyReference>
+      <AssemblyReference>System.IO.Compression.ZipFile</AssemblyReference>
+      <AssemblyReference>System.Xml.XDocument</AssemblyReference>
+      <AssemblyReference>System.Net.Http</AssemblyReference>
+      <AssemblyReference>System.Net.Mail</AssemblyReference>
+      <AssemblyReference>System.Net.Primitives</AssemblyReference>
+      <AssemblyReference>System.Security.Cryptography</AssemblyReference>
+      <AssemblyReference>System.Text.RegularExpressions</AssemblyReference>
+      <AssemblyReference>System.Runtime</AssemblyReference>
+      <AssemblyReference>System.Collections</AssemblyReference>
+      <AssemblyReference>Microsoft.VisualBasic.Core</AssemblyReference>
+    </sco:Collection>
+  </TextExpression.ReferencesForImplementation>
+  <Sequence DisplayName="FindDepartment">
+    <ui:InvokeCode DisplayName="FindDepartment" Language="VBNet" Code="Dim matches = in_Routing.Rows.Cast(Of System.Data.DataRow)().Where(Function(r) String.Equals(Convert.ToString(r(&quot;Organization&quot;)), io_Complaint(&quot;Organization&quot;), StringComparison.OrdinalIgnoreCase) AndAlso String.Equals(Convert.ToString(r(&quot;Category&quot;)), io_Complaint(&quot;Category&quot;), StringComparison.OrdinalIgnoreCase)).ToArray() If matches.Length &lt;&gt; 1 Then  If io_Complaint(&quot;Status&quot;) &lt;&gt; &quot;ManualReview&quot; Then io_Complaint(&quot;ErrorMessage&quot;) = &quot;Missing or duplicate routing key&quot;  io_Complaint(&quot;Status&quot;) = &quot;ManualReview&quot; : io_Complaint(&quot;Department&quot;) = &quot;Manual Review&quot; Else  Dim route = matches(0)  io_Complaint(&quot;Department&quot;) = Convert.ToString(route(&quot;Department&quot;))  io_Complaint(&quot;DepartmentEmail&quot;) = Convert.ToString(route(&quot;DepartmentEmail&quot;)).Trim()  io_Complaint(&quot;EscalationEmail&quot;) = Convert.ToString(route(&quot;EscalationEmail&quot;)).Trim()  Dim active = New String(){&quot;true&quot;,&quot;1&quot;,&quot;yes&quot;}.Contains(Convert.ToString(route(&quot;Active&quot;)).ToLowerInvariant())  Dim valid As Func(Of String, Boolean) = Function(address)   Try    If address.IndexOfAny(New Char(){ChrW(13),ChrW(10),&quot;,&quot;c,&quot;;&quot;c}) &gt;= 0 OrElse address.EndsWith(&quot;.example&quot;,StringComparison.OrdinalIgnoreCase) Then Return False    Dim a As New System.Net.Mail.MailAddress(address)    Return a.Address = address AndAlso address.Contains(&quot;@&quot;)   Catch    Return False   End Try  End Function  Dim authorized As Func(Of String, Boolean) = Function(address) in_AuthorizedRecipients.Any(Function(a) a.ContainsKey(&quot;Organization&quot;) AndAlso a.ContainsKey(&quot;Email&quot;) AndAlso a(&quot;Organization&quot;) = io_Complaint(&quot;Organization&quot;) AndAlso String.Equals(a(&quot;Email&quot;), address, StringComparison.OrdinalIgnoreCase))  If Not active OrElse Not valid(io_Complaint(&quot;DepartmentEmail&quot;)) OrElse Not authorized(io_Complaint(&quot;DepartmentEmail&quot;)) Then   If io_Complaint(&quot;Status&quot;) &lt;&gt; &quot;ManualReview&quot; Then    io_Complaint(&quot;Status&quot;) = &quot;RouteUnconfigured&quot;    io_Complaint(&quot;ErrorMessage&quot;) = &quot;Route inactive, recipient invalid or organization recipient not authorized&quot;   End If  End If  If io_Complaint(&quot;EscalationEmail&quot;) &lt;&gt; &quot;&quot; AndAlso (Not valid(io_Complaint(&quot;EscalationEmail&quot;)) OrElse Not authorized(io_Complaint(&quot;EscalationEmail&quot;))) Then io_Complaint(&quot;EscalationEmail&quot;) = &quot;&quot; End If">
+      <ui:InvokeCode.Arguments>
+        <InArgument x:TypeArguments="scg:Dictionary(x:String, x:String)" x:Key="io_Complaint">[io_Complaint]</InArgument>
+        <InArgument x:TypeArguments="sd:DataTable" x:Key="in_Routing">[in_Routing]</InArgument>
+        <InArgument x:TypeArguments="scg:List(scg:Dictionary(x:String, x:String))" x:Key="in_AuthorizedRecipients">[in_AuthorizedRecipients]</InArgument>
+      </ui:InvokeCode.Arguments>
+    </ui:InvokeCode>
+  </Sequence>
+</Activity>

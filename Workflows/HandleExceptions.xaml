@@ -1,0 +1,46 @@
+<?xml version="1.0" ?>
+<Activity xmlns="http://schemas.microsoft.com/netfx/2009/xaml/activities" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:ui="http://schemas.uipath.com/workflow/activities" xmlns:scg="clr-namespace:System.Collections.Generic;assembly=System.Private.CoreLib" xmlns:sd="clr-namespace:System.Data;assembly=System.Data.Common" xmlns:s="clr-namespace:System;assembly=System.Private.CoreLib" xmlns:sco="clr-namespace:System.Collections.ObjectModel;assembly=System.Private.CoreLib" x:Class="ResolveX_HandleExceptions">
+  <x:Members>
+    <x:Property Name="in_ProjectRoot" Type="InArgument(x:String)"/>
+    <x:Property Name="io_Complaint" Type="InArgument(scg:Dictionary(x:String, x:String))"/>
+    <x:Property Name="in_Error" Type="InArgument(s:Exception)"/>
+  </x:Members>
+  <TextExpression.NamespacesForImplementation>
+    <sco:Collection x:TypeArguments="x:String">
+      <x:String>System</x:String>
+      <x:String>System.Data</x:String>
+      <x:String>System.Collections.Generic</x:String>
+      <x:String>System.Linq</x:String>
+      <x:String>System.IO</x:String>
+      <x:String>System.Text.Json</x:String>
+    </sco:Collection>
+  </TextExpression.NamespacesForImplementation>
+  <TextExpression.ReferencesForImplementation>
+    <sco:Collection x:TypeArguments="AssemblyReference">
+      <AssemblyReference>System.Private.CoreLib</AssemblyReference>
+      <AssemblyReference>System.Data.Common</AssemblyReference>
+      <AssemblyReference>System.Linq</AssemblyReference>
+      <AssemblyReference>System.Text.Json</AssemblyReference>
+      <AssemblyReference>System.IO.Compression</AssemblyReference>
+      <AssemblyReference>System.IO.Compression.ZipFile</AssemblyReference>
+      <AssemblyReference>System.Xml.XDocument</AssemblyReference>
+      <AssemblyReference>System.Net.Http</AssemblyReference>
+      <AssemblyReference>System.Net.Mail</AssemblyReference>
+      <AssemblyReference>System.Net.Primitives</AssemblyReference>
+      <AssemblyReference>System.Security.Cryptography</AssemblyReference>
+      <AssemblyReference>System.Text.RegularExpressions</AssemblyReference>
+      <AssemblyReference>System.Runtime</AssemblyReference>
+      <AssemblyReference>System.Collections</AssemblyReference>
+      <AssemblyReference>Microsoft.VisualBasic.Core</AssemblyReference>
+    </sco:Collection>
+  </TextExpression.ReferencesForImplementation>
+  <Sequence DisplayName="HandleExceptions">
+    <ui:InvokeCode DisplayName="HandleExceptions" Language="VBNet" Code="io_Complaint(&quot;Status&quot;) = &quot;Failed&quot; io_Complaint(&quot;EscalationRequired&quot;) = &quot;True&quot; ' Persist only the exception type; server bodies can contain PII or tokens. io_Complaint(&quot;ErrorMessage&quot;) = in_Error.GetType().Name Dim folder = System.IO.Path.Combine(in_ProjectRoot,&quot;Output&quot;) System.IO.Directory.CreateDirectory(folder) System.IO.File.AppendAllText(System.IO.Path.Combine(folder,&quot;Failures.jsonl&quot;),System.Text.Json.JsonSerializer.Serialize(New With {.TicketID=io_Complaint(&quot;TicketID&quot;), .Utc=DateTime.UtcNow.ToString(&quot;o&quot;), .ErrorType=in_Error.GetType().Name}) &amp; Environment.NewLine)">
+      <ui:InvokeCode.Arguments>
+        <InArgument x:TypeArguments="x:String" x:Key="in_ProjectRoot">[in_ProjectRoot]</InArgument>
+        <InArgument x:TypeArguments="scg:Dictionary(x:String, x:String)" x:Key="io_Complaint">[io_Complaint]</InArgument>
+        <InArgument x:TypeArguments="s:Exception" x:Key="in_Error">[in_Error]</InArgument>
+      </ui:InvokeCode.Arguments>
+    </ui:InvokeCode>
+  </Sequence>
+</Activity>

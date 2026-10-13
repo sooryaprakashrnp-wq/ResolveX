@@ -1,0 +1,44 @@
+<?xml version="1.0" ?>
+<Activity xmlns="http://schemas.microsoft.com/netfx/2009/xaml/activities" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:ui="http://schemas.uipath.com/workflow/activities" xmlns:scg="clr-namespace:System.Collections.Generic;assembly=System.Private.CoreLib" xmlns:sd="clr-namespace:System.Data;assembly=System.Data.Common" xmlns:s="clr-namespace:System;assembly=System.Private.CoreLib" xmlns:sco="clr-namespace:System.Collections.ObjectModel;assembly=System.Private.CoreLib" x:Class="ResolveX_LoadWorkbook">
+  <x:Members>
+    <x:Property Name="in_Path" Type="InArgument(x:String)"/>
+    <x:Property Name="out_Table" Type="OutArgument(sd:DataTable)"/>
+  </x:Members>
+  <TextExpression.NamespacesForImplementation>
+    <sco:Collection x:TypeArguments="x:String">
+      <x:String>System</x:String>
+      <x:String>System.Data</x:String>
+      <x:String>System.Collections.Generic</x:String>
+      <x:String>System.Linq</x:String>
+      <x:String>System.IO</x:String>
+      <x:String>System.Text.Json</x:String>
+    </sco:Collection>
+  </TextExpression.NamespacesForImplementation>
+  <TextExpression.ReferencesForImplementation>
+    <sco:Collection x:TypeArguments="AssemblyReference">
+      <AssemblyReference>System.Private.CoreLib</AssemblyReference>
+      <AssemblyReference>System.Data.Common</AssemblyReference>
+      <AssemblyReference>System.Linq</AssemblyReference>
+      <AssemblyReference>System.Text.Json</AssemblyReference>
+      <AssemblyReference>System.IO.Compression</AssemblyReference>
+      <AssemblyReference>System.IO.Compression.ZipFile</AssemblyReference>
+      <AssemblyReference>System.Xml.XDocument</AssemblyReference>
+      <AssemblyReference>System.Net.Http</AssemblyReference>
+      <AssemblyReference>System.Net.Mail</AssemblyReference>
+      <AssemblyReference>System.Net.Primitives</AssemblyReference>
+      <AssemblyReference>System.Security.Cryptography</AssemblyReference>
+      <AssemblyReference>System.Text.RegularExpressions</AssemblyReference>
+      <AssemblyReference>System.Runtime</AssemblyReference>
+      <AssemblyReference>System.Collections</AssemblyReference>
+      <AssemblyReference>Microsoft.VisualBasic.Core</AssemblyReference>
+    </sco:Collection>
+  </TextExpression.ReferencesForImplementation>
+  <Sequence DisplayName="LoadWorkbook">
+    <ui:InvokeCode DisplayName="LoadWorkbook" Language="VBNet" Code="out_Table = New System.Data.DataTable() Using zip As System.IO.Compression.ZipArchive = System.IO.Compression.ZipFile.OpenRead(in_Path)  Dim ns As System.Xml.Linq.XNamespace = &quot;http://schemas.openxmlformats.org/spreadsheetml/2006/main&quot;  Dim relns As System.Xml.Linq.XNamespace = &quot;http://schemas.openxmlformats.org/package/2006/relationships&quot;  Dim shared As New System.Collections.Generic.List(Of String)()  Dim entry = zip.GetEntry(&quot;xl/sharedStrings.xml&quot;)  If entry IsNot Nothing Then   Using reader As New System.IO.StreamReader(entry.Open())    Dim doc = System.Xml.Linq.XDocument.Load(reader)    For Each item In doc.Descendants(ns + &quot;si&quot;)     shared.Add(String.Concat(item.Descendants(ns + &quot;t&quot;).Select(Function(x) x.Value)))    Next   End Using  End If  Dim sheetPath As String = &quot;xl/worksheets/sheet1.xml&quot;  Using reader As New System.IO.StreamReader(zip.GetEntry(&quot;xl/workbook.xml&quot;).Open())   Dim doc = System.Xml.Linq.XDocument.Load(reader)   Dim sheet = doc.Descendants(ns + &quot;sheet&quot;).First()   Dim rid = sheet.Attribute(System.Xml.Linq.XNamespace.Get(&quot;http://schemas.openxmlformats.org/officeDocument/2006/relationships&quot;) + &quot;id&quot;).Value   Using relreader As New System.IO.StreamReader(zip.GetEntry(&quot;xl/_rels/workbook.xml.rels&quot;).Open())    Dim rel = System.Xml.Linq.XDocument.Load(relreader).Descendants(relns + &quot;Relationship&quot;).First(Function(x) x.Attribute(&quot;Id&quot;).Value = rid)    Dim target = rel.Attribute(&quot;Target&quot;).Value    sheetPath = If(target.StartsWith(&quot;/&quot;), target.TrimStart(&quot;/&quot;c), &quot;xl/&quot; &amp; target)   End Using  End Using  Using reader As New System.IO.StreamReader(zip.GetEntry(sheetPath).Open())   Dim doc = System.Xml.Linq.XDocument.Load(reader)   Dim first As Boolean = True   For Each xr In doc.Descendants(ns + &quot;sheetData&quot;).Elements(ns + &quot;row&quot;)    Dim values As New System.Collections.Generic.Dictionary(Of Integer, String)()    For Each cell In xr.Elements(ns + &quot;c&quot;)     Dim ref = cell.Attribute(&quot;r&quot;).Value     Dim idx As Integer = 0     For Each ch As Char In ref      If Char.IsLetter(ch) Then idx = idx * 26 + AscW(Char.ToUpperInvariant(ch)) - 64 Else Exit For     Next     Dim kind = If(cell.Attribute(&quot;t&quot;) Is Nothing, &quot;&quot;, cell.Attribute(&quot;t&quot;).Value)     Dim v = cell.Element(ns + &quot;v&quot;)     Dim text As String = If(v Is Nothing, &quot;&quot;, v.Value)     If kind = &quot;s&quot; Then text = shared(Integer.Parse(text))     If kind = &quot;inlineStr&quot; Then text = String.Concat(cell.Descendants(ns + &quot;t&quot;).Select(Function(x) x.Value))     values(idx - 1) = text    Next    If first Then     For i As Integer = 0 To If(values.Count = 0, -1, values.Keys.Max())      Dim label = If(values.ContainsKey(i), values(i), &quot;Column&quot; &amp; i.ToString())      If String.IsNullOrWhiteSpace(label) Then label = &quot;Column&quot; &amp; i.ToString()      out_Table.Columns.Add(label, GetType(String))     Next     first = False    ElseIf values.Values.Any(Function(x) Not String.IsNullOrWhiteSpace(x)) Then     Dim row = out_Table.NewRow()     For Each kv In values      If kv.Key &lt; out_Table.Columns.Count Then row(kv.Key) = kv.Value     Next     out_Table.Rows.Add(row)    End If   Next  End Using End Using">
+      <ui:InvokeCode.Arguments>
+        <InArgument x:TypeArguments="x:String" x:Key="in_Path">[in_Path]</InArgument>
+        <OutArgument x:TypeArguments="sd:DataTable" x:Key="out_Table">[out_Table]</OutArgument>
+      </ui:InvokeCode.Arguments>
+    </ui:InvokeCode>
+  </Sequence>
+</Activity>

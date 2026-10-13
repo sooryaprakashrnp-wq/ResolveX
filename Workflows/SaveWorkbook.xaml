@@ -1,0 +1,44 @@
+<?xml version="1.0" ?>
+<Activity xmlns="http://schemas.microsoft.com/netfx/2009/xaml/activities" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:ui="http://schemas.uipath.com/workflow/activities" xmlns:scg="clr-namespace:System.Collections.Generic;assembly=System.Private.CoreLib" xmlns:sd="clr-namespace:System.Data;assembly=System.Data.Common" xmlns:s="clr-namespace:System;assembly=System.Private.CoreLib" xmlns:sco="clr-namespace:System.Collections.ObjectModel;assembly=System.Private.CoreLib" x:Class="ResolveX_SaveWorkbook">
+  <x:Members>
+    <x:Property Name="in_Path" Type="InArgument(x:String)"/>
+    <x:Property Name="in_Table" Type="InArgument(sd:DataTable)"/>
+  </x:Members>
+  <TextExpression.NamespacesForImplementation>
+    <sco:Collection x:TypeArguments="x:String">
+      <x:String>System</x:String>
+      <x:String>System.Data</x:String>
+      <x:String>System.Collections.Generic</x:String>
+      <x:String>System.Linq</x:String>
+      <x:String>System.IO</x:String>
+      <x:String>System.Text.Json</x:String>
+    </sco:Collection>
+  </TextExpression.NamespacesForImplementation>
+  <TextExpression.ReferencesForImplementation>
+    <sco:Collection x:TypeArguments="AssemblyReference">
+      <AssemblyReference>System.Private.CoreLib</AssemblyReference>
+      <AssemblyReference>System.Data.Common</AssemblyReference>
+      <AssemblyReference>System.Linq</AssemblyReference>
+      <AssemblyReference>System.Text.Json</AssemblyReference>
+      <AssemblyReference>System.IO.Compression</AssemblyReference>
+      <AssemblyReference>System.IO.Compression.ZipFile</AssemblyReference>
+      <AssemblyReference>System.Xml.XDocument</AssemblyReference>
+      <AssemblyReference>System.Net.Http</AssemblyReference>
+      <AssemblyReference>System.Net.Mail</AssemblyReference>
+      <AssemblyReference>System.Net.Primitives</AssemblyReference>
+      <AssemblyReference>System.Security.Cryptography</AssemblyReference>
+      <AssemblyReference>System.Text.RegularExpressions</AssemblyReference>
+      <AssemblyReference>System.Runtime</AssemblyReference>
+      <AssemblyReference>System.Collections</AssemblyReference>
+      <AssemblyReference>Microsoft.VisualBasic.Core</AssemblyReference>
+    </sco:Collection>
+  </TextExpression.ReferencesForImplementation>
+  <Sequence DisplayName="SaveWorkbook">
+    <ui:InvokeCode DisplayName="SaveWorkbook" Language="VBNet" Code="Dim dir = System.IO.Path.GetDirectoryName(in_Path) System.IO.Directory.CreateDirectory(dir) Dim tmp = in_Path &amp; &quot;.&quot; &amp; Guid.NewGuid().ToString(&quot;N&quot;) &amp; &quot;.tmp&quot; Dim escape As Func(Of String, String) = Function(v) System.Security.SecurityElement.Escape(System.Text.RegularExpressions.Regex.Replace(If(v, &quot;&quot;), &quot;[\x00-\x08\x0B\x0C\x0E-\x1F]&quot;, &quot;&quot;)) Dim columnName As Func(Of Integer, String) = Function(index)  Dim s As String = &quot;&quot;  Do   index -= 1 : s = ChrW(65 + index Mod 26) &amp; s : index = index \ 26  Loop While index &gt; 0  Return s End Function Try  Using zip As System.IO.Compression.ZipArchive = System.IO.Compression.ZipFile.Open(tmp, System.IO.Compression.ZipArchiveMode.Create)   Dim add As Action(Of String, String) = Sub(name, text)    Using writer As New System.IO.StreamWriter(zip.CreateEntry(name).Open(), New System.Text.UTF8Encoding(False))     writer.Write(text)    End Using   End Sub   add(&quot;[Content_Types].xml&quot;, &quot;&lt;Types xmlns=&quot;&quot;http://schemas.openxmlformats.org/package/2006/content-types&quot;&quot;&gt;&lt;Default Extension=&quot;&quot;rels&quot;&quot; ContentType=&quot;&quot;application/vnd.openxmlformats-package.relationships+xml&quot;&quot;/&gt;&lt;Default Extension=&quot;&quot;xml&quot;&quot; ContentType=&quot;&quot;application/xml&quot;&quot;/&gt;&lt;Override PartName=&quot;&quot;/xl/workbook.xml&quot;&quot; ContentType=&quot;&quot;application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml&quot;&quot;/&gt;&lt;Override PartName=&quot;&quot;/xl/worksheets/sheet1.xml&quot;&quot; ContentType=&quot;&quot;application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml&quot;&quot;/&gt;&lt;/Types&gt;&quot;)   add(&quot;_rels/.rels&quot;, &quot;&lt;Relationships xmlns=&quot;&quot;http://schemas.openxmlformats.org/package/2006/relationships&quot;&quot;&gt;&lt;Relationship Id=&quot;&quot;rId1&quot;&quot; Type=&quot;&quot;http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument&quot;&quot; Target=&quot;&quot;xl/workbook.xml&quot;&quot;/&gt;&lt;/Relationships&gt;&quot;)   add(&quot;xl/workbook.xml&quot;, &quot;&lt;workbook xmlns=&quot;&quot;http://schemas.openxmlformats.org/spreadsheetml/2006/main&quot;&quot; xmlns:r=&quot;&quot;http://schemas.openxmlformats.org/officeDocument/2006/relationships&quot;&quot;&gt;&lt;sheets&gt;&lt;sheet name=&quot;&quot;Data&quot;&quot; sheetId=&quot;&quot;1&quot;&quot; r:id=&quot;&quot;rId1&quot;&quot;/&gt;&lt;/sheets&gt;&lt;/workbook&gt;&quot;)   add(&quot;xl/_rels/workbook.xml.rels&quot;, &quot;&lt;Relationships xmlns=&quot;&quot;http://schemas.openxmlformats.org/package/2006/relationships&quot;&quot;&gt;&lt;Relationship Id=&quot;&quot;rId1&quot;&quot; Type=&quot;&quot;http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet&quot;&quot; Target=&quot;&quot;worksheets/sheet1.xml&quot;&quot;/&gt;&lt;/Relationships&gt;&quot;)   Dim sb As New System.Text.StringBuilder(&quot;&lt;worksheet xmlns=&quot;&quot;http://schemas.openxmlformats.org/spreadsheetml/2006/main&quot;&quot;&gt;&lt;sheetViews&gt;&lt;sheetView workbookViewId=&quot;&quot;0&quot;&quot;&gt;&lt;pane ySplit=&quot;&quot;1&quot;&quot; topLeftCell=&quot;&quot;A2&quot;&quot; activePane=&quot;&quot;bottomLeft&quot;&quot; state=&quot;&quot;frozen&quot;&quot;/&gt;&lt;/sheetView&gt;&lt;/sheetViews&gt;&lt;cols&gt;&quot;)   For i As Integer = 1 To in_Table.Columns.Count    sb.Append(&quot;&lt;col min=&quot;&quot;&quot;).Append(i).Append(&quot;&quot;&quot; max=&quot;&quot;&quot;).Append(i).Append(&quot;&quot;&quot; width=&quot;&quot;24&quot;&quot; customWidth=&quot;&quot;1&quot;&quot;/&gt;&quot;)   Next   sb.Append(&quot;&lt;/cols&gt;&lt;sheetData&gt;&quot;)   For r As Integer = 0 To in_Table.Rows.Count    sb.Append(&quot;&lt;row r=&quot;&quot;&quot;).Append(r + 1).Append(&quot;&quot;&quot;&gt;&quot;)    For c As Integer = 0 To in_Table.Columns.Count - 1     Dim value As String = If(r = 0, in_Table.Columns(c).ColumnName, Convert.ToString(in_Table.Rows(r - 1)(c), System.Globalization.CultureInfo.InvariantCulture))     sb.Append(&quot;&lt;c r=&quot;&quot;&quot;).Append(columnName(c + 1)).Append(r + 1).Append(&quot;&quot;&quot; t=&quot;&quot;inlineStr&quot;&quot;&gt;&lt;is&gt;&lt;t xml:space=&quot;&quot;preserve&quot;&quot;&gt;&quot;).Append(escape(value)).Append(&quot;&lt;/t&gt;&lt;/is&gt;&lt;/c&gt;&quot;)    Next    sb.Append(&quot;&lt;/row&gt;&quot;)   Next   sb.Append(&quot;&lt;/sheetData&gt;&lt;autoFilter ref=&quot;&quot;A1:&quot;).Append(columnName(in_Table.Columns.Count)).Append(in_Table.Rows.Count + 1).Append(&quot;&quot;&quot;/&gt;&lt;/worksheet&gt;&quot;)   add(&quot;xl/worksheets/sheet1.xml&quot;, sb.ToString())  End Using  If System.IO.File.Exists(in_Path) Then   System.IO.File.Replace(tmp, in_Path, in_Path &amp; &quot;.bak&quot;, True)  Else   System.IO.File.Move(tmp, in_Path)  End If Finally  If System.IO.File.Exists(tmp) Then System.IO.File.Delete(tmp) End Try">
+      <ui:InvokeCode.Arguments>
+        <InArgument x:TypeArguments="x:String" x:Key="in_Path">[in_Path]</InArgument>
+        <InArgument x:TypeArguments="sd:DataTable" x:Key="in_Table">[in_Table]</InArgument>
+      </ui:InvokeCode.Arguments>
+    </ui:InvokeCode>
+  </Sequence>
+</Activity>

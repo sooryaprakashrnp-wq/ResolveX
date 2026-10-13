@@ -1,0 +1,48 @@
+<?xml version="1.0" ?>
+<Activity xmlns="http://schemas.microsoft.com/netfx/2009/xaml/activities" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:ui="http://schemas.uipath.com/workflow/activities" xmlns:scg="clr-namespace:System.Collections.Generic;assembly=System.Private.CoreLib" xmlns:sd="clr-namespace:System.Data;assembly=System.Data.Common" xmlns:s="clr-namespace:System;assembly=System.Private.CoreLib" xmlns:sco="clr-namespace:System.Collections.ObjectModel;assembly=System.Private.CoreLib" x:Class="ResolveX_ReadGmail">
+  <x:Members>
+    <x:Property Name="in_ProjectRoot" Type="InArgument(x:String)"/>
+    <x:Property Name="in_UseSample" Type="InArgument(x:Boolean)"/>
+    <x:Property Name="in_GmailEmails" Type="InArgument(x:Object)"/>
+    <x:Property Name="out_Emails" Type="OutArgument(scg:List(scg:Dictionary(x:String, x:String)))"/>
+  </x:Members>
+  <TextExpression.NamespacesForImplementation>
+    <sco:Collection x:TypeArguments="x:String">
+      <x:String>System</x:String>
+      <x:String>System.Data</x:String>
+      <x:String>System.Collections.Generic</x:String>
+      <x:String>System.Linq</x:String>
+      <x:String>System.IO</x:String>
+      <x:String>System.Text.Json</x:String>
+    </sco:Collection>
+  </TextExpression.NamespacesForImplementation>
+  <TextExpression.ReferencesForImplementation>
+    <sco:Collection x:TypeArguments="AssemblyReference">
+      <AssemblyReference>System.Private.CoreLib</AssemblyReference>
+      <AssemblyReference>System.Data.Common</AssemblyReference>
+      <AssemblyReference>System.Linq</AssemblyReference>
+      <AssemblyReference>System.Text.Json</AssemblyReference>
+      <AssemblyReference>System.IO.Compression</AssemblyReference>
+      <AssemblyReference>System.IO.Compression.ZipFile</AssemblyReference>
+      <AssemblyReference>System.Xml.XDocument</AssemblyReference>
+      <AssemblyReference>System.Net.Http</AssemblyReference>
+      <AssemblyReference>System.Net.Mail</AssemblyReference>
+      <AssemblyReference>System.Net.Primitives</AssemblyReference>
+      <AssemblyReference>System.Security.Cryptography</AssemblyReference>
+      <AssemblyReference>System.Text.RegularExpressions</AssemblyReference>
+      <AssemblyReference>System.Runtime</AssemblyReference>
+      <AssemblyReference>System.Collections</AssemblyReference>
+      <AssemblyReference>Microsoft.VisualBasic.Core</AssemblyReference>
+    </sco:Collection>
+  </TextExpression.ReferencesForImplementation>
+  <Sequence DisplayName="ReadGmail">
+    <ui:InvokeCode DisplayName="ReadGmail" Language="VBNet" Code="out_Emails = New System.Collections.Generic.List(Of System.Collections.Generic.Dictionary(Of String, String))() If in_UseSample Then  Dim json = System.IO.File.ReadAllText(System.IO.Path.Combine(in_ProjectRoot, &quot;Data&quot;, &quot;SampleEmails.json&quot;))  out_Emails = System.Text.Json.JsonSerializer.Deserialize(Of System.Collections.Generic.List(Of System.Collections.Generic.Dictionary(Of String, String)))(json) Else  If in_GmailEmails Is Nothing Then Throw New InvalidOperationException(&quot;Gmail input missing. Add Get Email List with your existing connection before invoking Main; pass its Emails output to in_GmailEmails. See Docs/GMAIL_SETUP.md.&quot;)  Dim enumerable = TryCast(in_GmailEmails, System.Collections.IEnumerable)  If enumerable Is Nothing Then Throw New InvalidOperationException(&quot;Pass the Get Email List Emails collection, not a Get Newest Email scalar.&quot;)  Dim propertyText As Func(Of Object, String, String) = Function(obj, name)   Dim prop = obj.GetType().GetProperty(name)   If prop Is Nothing Then Return &quot;&quot;   Dim value = prop.GetValue(obj)   If value Is Nothing Then Return &quot;&quot;   If TypeOf value Is DateTime Then Return DirectCast(value, DateTime).ToUniversalTime().ToString(&quot;o&quot;)   If TypeOf value Is DateTimeOffset Then Return DirectCast(value, DateTimeOffset).ToUniversalTime().ToString(&quot;o&quot;)   Return Convert.ToString(value, System.Globalization.CultureInfo.InvariantCulture)  End Function  For Each msg As Object In enumerable   If msg Is Nothing Then Continue For   Dim r As New System.Collections.Generic.Dictionary(Of String, String)(StringComparer.Ordinal)   r(&quot;GmailMessageID&quot;) = propertyText(msg, &quot;MessageId&quot;)   r(&quot;CustomerEmail&quot;) = propertyText(msg, &quot;FromAddress&quot;)   If r(&quot;CustomerEmail&quot;) = &quot;&quot; Then r(&quot;CustomerEmail&quot;) = propertyText(msg, &quot;SenderAddress&quot;)   r(&quot;Subject&quot;) = propertyText(msg, &quot;Subject&quot;)   r(&quot;ComplaintText&quot;) = propertyText(msg, &quot;Body&quot;)   r(&quot;ReceivedDate&quot;) = propertyText(msg, &quot;ReceivedDateTime&quot;)   out_Emails.Add(r)  Next End If For Each r In out_Emails  For Each key In New String(){&quot;GmailMessageID&quot;, &quot;CustomerEmail&quot;, &quot;Subject&quot;, &quot;ComplaintText&quot;, &quot;ReceivedDate&quot;}   If Not r.ContainsKey(key) Then r(key) = &quot;&quot;  Next  If String.IsNullOrWhiteSpace(r(&quot;GmailMessageID&quot;)) Then   r(&quot;Status&quot;) = &quot;ManualReview&quot; : r(&quot;ErrorMessage&quot;) = &quot;Missing Gmail message ID&quot;   r(&quot;GmailMessageID&quot;) = &quot;invalid-&quot; &amp; Guid.NewGuid().ToString(&quot;N&quot;)  End If  Dim dt As DateTimeOffset  If Not DateTimeOffset.TryParse(r(&quot;ReceivedDate&quot;), System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.AssumeUniversal, dt) Then   r(&quot;ReceivedDate&quot;) = DateTimeOffset.UtcNow.ToString(&quot;o&quot;)   r(&quot;Status&quot;) = &quot;ManualReview&quot; : r(&quot;ErrorMessage&quot;) = &quot;Missing or invalid received timestamp&quot;  Else   r(&quot;ReceivedDate&quot;) = dt.ToUniversalTime().ToString(&quot;o&quot;)  End If  Using sha As System.Security.Cryptography.SHA256 = System.Security.Cryptography.SHA256.Create()   r(&quot;TicketID&quot;) = &quot;RX-&quot; &amp; BitConverter.ToString(sha.ComputeHash(System.Text.Encoding.UTF8.GetBytes(r(&quot;GmailMessageID&quot;)))).Replace(&quot;-&quot;, &quot;&quot;).Substring(0, 16)  End Using  For Each key In New String(){&quot;Organization&quot;,&quot;Category&quot;,&quot;Sentiment&quot;,&quot;Priority&quot;,&quot;Confidence&quot;,&quot;Department&quot;,&quot;DepartmentEmail&quot;,&quot;SuggestedResponse&quot;,&quot;ForwardedDate&quot;,&quot;ClassificationSource&quot;,&quot;Summary&quot;,&quot;EscalationEmail&quot;,&quot;EscalationRequired&quot;}   If Not r.ContainsKey(key) Then r(key) = &quot;&quot;  Next  If Not r.ContainsKey(&quot;Status&quot;) Then r(&quot;Status&quot;) = &quot;New&quot;  If Not r.ContainsKey(&quot;ErrorMessage&quot;) Then r(&quot;ErrorMessage&quot;) = &quot;&quot; Next">
+      <ui:InvokeCode.Arguments>
+        <InArgument x:TypeArguments="x:String" x:Key="in_ProjectRoot">[in_ProjectRoot]</InArgument>
+        <InArgument x:TypeArguments="x:Boolean" x:Key="in_UseSample">[in_UseSample]</InArgument>
+        <InArgument x:TypeArguments="x:Object" x:Key="in_GmailEmails">[in_GmailEmails]</InArgument>
+        <OutArgument x:TypeArguments="scg:List(scg:Dictionary(x:String, x:String))" x:Key="out_Emails">[out_Emails]</OutArgument>
+      </ui:InvokeCode.Arguments>
+    </ui:InvokeCode>
+  </Sequence>
+</Activity>

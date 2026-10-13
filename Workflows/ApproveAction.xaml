@@ -1,0 +1,48 @@
+<?xml version="1.0" ?>
+<Activity xmlns="http://schemas.microsoft.com/netfx/2009/xaml/activities" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:ui="http://schemas.uipath.com/workflow/activities" xmlns:scg="clr-namespace:System.Collections.Generic;assembly=System.Private.CoreLib" xmlns:sd="clr-namespace:System.Data;assembly=System.Data.Common" xmlns:s="clr-namespace:System;assembly=System.Private.CoreLib" xmlns:sco="clr-namespace:System.Collections.ObjectModel;assembly=System.Private.CoreLib" x:Class="ResolveX_ApproveAction">
+  <x:Members>
+    <x:Property Name="in_ProjectRoot" Type="InArgument(x:String)"/>
+    <x:Property Name="in_Action" Type="InArgument(scg:Dictionary(x:String, x:String))"/>
+    <x:Property Name="in_SendEnabled" Type="InArgument(x:Boolean)"/>
+    <x:Property Name="out_Approved" Type="OutArgument(x:Boolean)"/>
+  </x:Members>
+  <TextExpression.NamespacesForImplementation>
+    <sco:Collection x:TypeArguments="x:String">
+      <x:String>System</x:String>
+      <x:String>System.Data</x:String>
+      <x:String>System.Collections.Generic</x:String>
+      <x:String>System.Linq</x:String>
+      <x:String>System.IO</x:String>
+      <x:String>System.Text.Json</x:String>
+    </sco:Collection>
+  </TextExpression.NamespacesForImplementation>
+  <TextExpression.ReferencesForImplementation>
+    <sco:Collection x:TypeArguments="AssemblyReference">
+      <AssemblyReference>System.Private.CoreLib</AssemblyReference>
+      <AssemblyReference>System.Data.Common</AssemblyReference>
+      <AssemblyReference>System.Linq</AssemblyReference>
+      <AssemblyReference>System.Text.Json</AssemblyReference>
+      <AssemblyReference>System.IO.Compression</AssemblyReference>
+      <AssemblyReference>System.IO.Compression.ZipFile</AssemblyReference>
+      <AssemblyReference>System.Xml.XDocument</AssemblyReference>
+      <AssemblyReference>System.Net.Http</AssemblyReference>
+      <AssemblyReference>System.Net.Mail</AssemblyReference>
+      <AssemblyReference>System.Net.Primitives</AssemblyReference>
+      <AssemblyReference>System.Security.Cryptography</AssemblyReference>
+      <AssemblyReference>System.Text.RegularExpressions</AssemblyReference>
+      <AssemblyReference>System.Runtime</AssemblyReference>
+      <AssemblyReference>System.Collections</AssemblyReference>
+      <AssemblyReference>Microsoft.VisualBasic.Core</AssemblyReference>
+    </sco:Collection>
+  </TextExpression.ReferencesForImplementation>
+  <Sequence DisplayName="ApproveAction">
+    <ui:InvokeCode DisplayName="ApproveAction" Language="VBNet" Code="out_Approved = False If Not in_SendEnabled Then Return Dim target = in_Action(&quot;To&quot;) If target.IndexOfAny(New Char(){ChrW(13),ChrW(10),&quot;,&quot;c,&quot;;&quot;c}) &gt;= 0 OrElse target.EndsWith(&quot;.example&quot;,StringComparison.OrdinalIgnoreCase) Then Throw New InvalidOperationException(&quot;Unsafe recipient&quot;) Dim address As New System.Net.Mail.MailAddress(target) If address.Address &lt;&gt; target Then Throw New InvalidOperationException(&quot;Use plain single recipient&quot;) Dim allowed = System.Text.Json.JsonSerializer.Deserialize(Of System.Collections.Generic.List(Of System.Collections.Generic.Dictionary(Of String,String)))(System.IO.File.ReadAllText(System.IO.Path.Combine(in_ProjectRoot,&quot;Config&quot;,&quot;AuthorizedRecipients.json&quot;))) If Not allowed.Any(Function(r) r(&quot;Organization&quot;) = in_Action(&quot;Organization&quot;) AndAlso String.Equals(r(&quot;Email&quot;),target,StringComparison.OrdinalIgnoreCase)) Then Throw New InvalidOperationException(&quot;Recipient not organization-authorized&quot;) Using doc = System.Text.Json.JsonDocument.Parse(System.IO.File.ReadAllText(System.IO.Path.Combine(in_ProjectRoot,&quot;Config&quot;,&quot;SendApproval.json&quot;)))  Dim expiry = DateTimeOffset.Parse(doc.RootElement.GetProperty(&quot;ExpiresUtc&quot;).GetString())  If expiry &lt;= DateTimeOffset.UtcNow Then Throw New InvalidOperationException(&quot;Send approval expired&quot;)  For Each item In doc.RootElement.GetProperty(&quot;Actions&quot;).EnumerateArray()   If New String(){&quot;ActionID&quot;,&quot;To&quot;,&quot;Subject&quot;,&quot;Body&quot;,&quot;Organization&quot;}.All(Function(k) item.GetProperty(k).GetString() = in_Action(k)) Then out_Approved = True  Next End Using If Not out_Approved Then Throw New InvalidOperationException(&quot;Exact action owner approval is missing&quot;)">
+      <ui:InvokeCode.Arguments>
+        <InArgument x:TypeArguments="x:String" x:Key="in_ProjectRoot">[in_ProjectRoot]</InArgument>
+        <InArgument x:TypeArguments="scg:Dictionary(x:String, x:String)" x:Key="in_Action">[in_Action]</InArgument>
+        <InArgument x:TypeArguments="x:Boolean" x:Key="in_SendEnabled">[in_SendEnabled]</InArgument>
+        <OutArgument x:TypeArguments="x:Boolean" x:Key="out_Approved">[out_Approved]</OutArgument>
+      </ui:InvokeCode.Arguments>
+    </ui:InvokeCode>
+  </Sequence>
+</Activity>

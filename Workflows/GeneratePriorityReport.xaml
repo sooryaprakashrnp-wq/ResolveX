@@ -1,0 +1,44 @@
+<?xml version="1.0" ?>
+<Activity xmlns="http://schemas.microsoft.com/netfx/2009/xaml/activities" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:ui="http://schemas.uipath.com/workflow/activities" xmlns:scg="clr-namespace:System.Collections.Generic;assembly=System.Private.CoreLib" xmlns:sd="clr-namespace:System.Data;assembly=System.Data.Common" xmlns:s="clr-namespace:System;assembly=System.Private.CoreLib" xmlns:sco="clr-namespace:System.Collections.ObjectModel;assembly=System.Private.CoreLib" x:Class="ResolveX_GeneratePriorityReport">
+  <x:Members>
+    <x:Property Name="in_Log" Type="InArgument(sd:DataTable)"/>
+    <x:Property Name="out_Report" Type="OutArgument(sd:DataTable)"/>
+  </x:Members>
+  <TextExpression.NamespacesForImplementation>
+    <sco:Collection x:TypeArguments="x:String">
+      <x:String>System</x:String>
+      <x:String>System.Data</x:String>
+      <x:String>System.Collections.Generic</x:String>
+      <x:String>System.Linq</x:String>
+      <x:String>System.IO</x:String>
+      <x:String>System.Text.Json</x:String>
+    </sco:Collection>
+  </TextExpression.NamespacesForImplementation>
+  <TextExpression.ReferencesForImplementation>
+    <sco:Collection x:TypeArguments="AssemblyReference">
+      <AssemblyReference>System.Private.CoreLib</AssemblyReference>
+      <AssemblyReference>System.Data.Common</AssemblyReference>
+      <AssemblyReference>System.Linq</AssemblyReference>
+      <AssemblyReference>System.Text.Json</AssemblyReference>
+      <AssemblyReference>System.IO.Compression</AssemblyReference>
+      <AssemblyReference>System.IO.Compression.ZipFile</AssemblyReference>
+      <AssemblyReference>System.Xml.XDocument</AssemblyReference>
+      <AssemblyReference>System.Net.Http</AssemblyReference>
+      <AssemblyReference>System.Net.Mail</AssemblyReference>
+      <AssemblyReference>System.Net.Primitives</AssemblyReference>
+      <AssemblyReference>System.Security.Cryptography</AssemblyReference>
+      <AssemblyReference>System.Text.RegularExpressions</AssemblyReference>
+      <AssemblyReference>System.Runtime</AssemblyReference>
+      <AssemblyReference>System.Collections</AssemblyReference>
+      <AssemblyReference>Microsoft.VisualBasic.Core</AssemblyReference>
+    </sco:Collection>
+  </TextExpression.ReferencesForImplementation>
+  <Sequence DisplayName="GeneratePriorityReport">
+    <ui:InvokeCode DisplayName="GeneratePriorityReport" Language="VBNet" Code="out_Report = in_Log.Clone() Dim ranks As New System.Collections.Generic.Dictionary(Of String,Integer) From {{&quot;Critical&quot;,0},{&quot;High&quot;,1},{&quot;Medium&quot;,2},{&quot;Low&quot;,3}} Dim parseDate As Func(Of System.Data.DataRow,DateTimeOffset) = Function(r)  Dim result As DateTimeOffset  If DateTimeOffset.TryParse(Convert.ToString(r(&quot;ReceivedDate&quot;)),result) Then Return result  Return DateTimeOffset.MaxValue End Function Dim rows = in_Log.Rows.Cast(Of System.Data.DataRow)().OrderBy(Function(r) If(ranks.ContainsKey(Convert.ToString(r(&quot;Priority&quot;))),ranks(Convert.ToString(r(&quot;Priority&quot;))),4)).ThenBy(Function(r) parseDate(r)).ThenBy(Function(r) Convert.ToString(r(&quot;TicketID&quot;)),StringComparer.Ordinal).Take(5) For Each row In rows  out_Report.ImportRow(row) Next">
+      <ui:InvokeCode.Arguments>
+        <InArgument x:TypeArguments="sd:DataTable" x:Key="in_Log">[in_Log]</InArgument>
+        <OutArgument x:TypeArguments="sd:DataTable" x:Key="out_Report">[out_Report]</OutArgument>
+      </ui:InvokeCode.Arguments>
+    </ui:InvokeCode>
+  </Sequence>
+</Activity>
