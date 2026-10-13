@@ -1,0 +1,251 @@
+<?xml version="1.0" ?>
+<Activity xmlns="http://schemas.microsoft.com/netfx/2009/xaml/activities" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:ui="http://schemas.uipath.com/workflow/activities" xmlns:scg="clr-namespace:System.Collections.Generic;assembly=System.Private.CoreLib" xmlns:sd="clr-namespace:System.Data;assembly=System.Data.Common" xmlns:s="clr-namespace:System;assembly=System.Private.CoreLib" xmlns:sco="clr-namespace:System.Collections.ObjectModel;assembly=System.Private.CoreLib" x:Class="ResolveX_Main">
+  <x:Members>
+    <x:Property Name="in_ProjectRoot" Type="InArgument(x:String)"/>
+    <x:Property Name="in_UseSample" Type="InArgument(x:Boolean)"/>
+    <x:Property Name="in_GmailEmails" Type="InArgument(x:Object)"/>
+    <x:Property Name="in_SendEnabled" Type="InArgument(x:Boolean)"/>
+    <x:Property Name="in_AIEnabled" Type="InArgument(x:Boolean)"/>
+    <x:Property Name="in_AIApproved" Type="InArgument(x:Boolean)"/>
+  </x:Members>
+  <TextExpression.NamespacesForImplementation>
+    <sco:Collection x:TypeArguments="x:String">
+      <x:String>System</x:String>
+      <x:String>System.Data</x:String>
+      <x:String>System.Collections.Generic</x:String>
+      <x:String>System.Linq</x:String>
+      <x:String>System.IO</x:String>
+      <x:String>System.Text.Json</x:String>
+    </sco:Collection>
+  </TextExpression.NamespacesForImplementation>
+  <TextExpression.ReferencesForImplementation>
+    <sco:Collection x:TypeArguments="AssemblyReference">
+      <AssemblyReference>System.Private.CoreLib</AssemblyReference>
+      <AssemblyReference>System.Data.Common</AssemblyReference>
+      <AssemblyReference>System.Linq</AssemblyReference>
+      <AssemblyReference>System.Text.Json</AssemblyReference>
+      <AssemblyReference>System.IO.Compression</AssemblyReference>
+      <AssemblyReference>System.IO.Compression.ZipFile</AssemblyReference>
+      <AssemblyReference>System.Xml.XDocument</AssemblyReference>
+      <AssemblyReference>System.Net.Http</AssemblyReference>
+      <AssemblyReference>System.Net.Mail</AssemblyReference>
+      <AssemblyReference>System.Net.Primitives</AssemblyReference>
+      <AssemblyReference>System.Security.Cryptography</AssemblyReference>
+      <AssemblyReference>System.Text.RegularExpressions</AssemblyReference>
+      <AssemblyReference>System.Runtime</AssemblyReference>
+      <AssemblyReference>System.Collections</AssemblyReference>
+      <AssemblyReference>Microsoft.VisualBasic.Core</AssemblyReference>
+    </sco:Collection>
+  </TextExpression.ReferencesForImplementation>
+  <Sequence DisplayName="Main">
+    <Sequence.Variables>
+      <Variable x:TypeArguments="scg:List(scg:Dictionary(x:String, x:String))" Name="emails"/>
+      <Variable x:TypeArguments="sd:DataTable" Name="routes"/>
+      <Variable x:TypeArguments="sd:DataTable" Name="faq"/>
+      <Variable x:TypeArguments="sd:DataTable" Name="log"/>
+      <Variable x:TypeArguments="sd:DataTable" Name="report"/>
+      <Variable x:TypeArguments="scg:List(scg:Dictionary(x:String, x:String))" Name="authorized"/>
+      <Variable x:TypeArguments="scg:List(scg:Dictionary(x:String, x:String))" Name="actions"/>
+      <Variable x:TypeArguments="x:Boolean" Name="skip"/>
+      <Variable x:TypeArguments="x:String" Name="effectiveRoot"/>
+      <Variable x:TypeArguments="x:Boolean" Name="sampleMode"/>
+      <Variable x:TypeArguments="x:Object" Name="lockHandle"/>
+    </Sequence.Variables>
+    <TryCatch>
+      <TryCatch.Try>
+        <Sequence>
+          <ui:InvokeCode DisplayName="Validate root and fail closed" Language="VBNet" Code="effectiveRoot = If(String.IsNullOrWhiteSpace(in_ProjectRoot),System.IO.Directory.GetCurrentDirectory(),in_ProjectRoot) Dim required = System.IO.Path.Combine(effectiveRoot,&quot;Data&quot;,&quot;Routing.xlsx&quot;) If Not System.IO.File.Exists(required) Then Throw New InvalidOperationException(&quot;Set in_ProjectRoot to the extracted ResolveX_Hackathon folder&quot;) System.IO.Directory.CreateDirectory(System.IO.Path.Combine(effectiveRoot,&quot;Output&quot;)) System.IO.Directory.CreateDirectory(System.IO.Path.Combine(effectiveRoot,&quot;State&quot;)) sampleMode = in_UseSample OrElse in_GmailEmails Is Nothing If Not in_UseSample AndAlso in_GmailEmails Is Nothing AndAlso in_SendEnabled Then Throw New InvalidOperationException(&quot;Cannot enable sending without Gmail input&quot;) If sampleMode AndAlso in_SendEnabled Then Throw New InvalidOperationException(&quot;Sample mode never sends&quot;) lockHandle = System.IO.File.Open(System.IO.Path.Combine(effectiveRoot,&quot;State&quot;,&quot;Run.lock&quot;),System.IO.FileMode.OpenOrCreate,System.IO.FileAccess.ReadWrite,System.IO.FileShare.None) authorized = System.Text.Json.JsonSerializer.Deserialize(Of System.Collections.Generic.List(Of System.Collections.Generic.Dictionary(Of String,String)))(System.IO.File.ReadAllText(System.IO.Path.Combine(effectiveRoot,&quot;Config&quot;,&quot;AuthorizedRecipients.json&quot;)))">
+            <ui:InvokeCode.Arguments>
+              <InArgument x:TypeArguments="x:String" x:Key="in_ProjectRoot">[in_ProjectRoot]</InArgument>
+              <InArgument x:TypeArguments="x:Boolean" x:Key="in_UseSample">[in_UseSample]</InArgument>
+              <InArgument x:TypeArguments="x:Object" x:Key="in_GmailEmails">[in_GmailEmails]</InArgument>
+              <InArgument x:TypeArguments="x:Boolean" x:Key="in_SendEnabled">[in_SendEnabled]</InArgument>
+              <OutArgument x:TypeArguments="x:String" x:Key="effectiveRoot">[effectiveRoot]</OutArgument>
+              <OutArgument x:TypeArguments="x:Boolean" x:Key="sampleMode">[sampleMode]</OutArgument>
+              <OutArgument x:TypeArguments="scg:List(scg:Dictionary(x:String, x:String))" x:Key="authorized">[authorized]</OutArgument>
+              <OutArgument x:TypeArguments="x:Object" x:Key="lockHandle">[lockHandle]</OutArgument>
+            </ui:InvokeCode.Arguments>
+          </ui:InvokeCode>
+          <ui:InvokeWorkflowFile DisplayName="LoadWorkbook" WorkflowFileName="[System.IO.Path.Combine(effectiveRoot, &quot;Workflows&quot;, &quot;LoadWorkbook.xaml&quot;)]">
+            <ui:InvokeWorkflowFile.Arguments>
+              <InArgument x:TypeArguments="x:String" x:Key="in_Path">[System.IO.Path.Combine(effectiveRoot,&quot;Data&quot;,&quot;Routing.xlsx&quot;)]</InArgument>
+              <OutArgument x:TypeArguments="sd:DataTable" x:Key="out_Table">[routes]</OutArgument>
+            </ui:InvokeWorkflowFile.Arguments>
+          </ui:InvokeWorkflowFile>
+          <ui:InvokeWorkflowFile DisplayName="LoadWorkbook" WorkflowFileName="[System.IO.Path.Combine(effectiveRoot, &quot;Workflows&quot;, &quot;LoadWorkbook.xaml&quot;)]">
+            <ui:InvokeWorkflowFile.Arguments>
+              <InArgument x:TypeArguments="x:String" x:Key="in_Path">[System.IO.Path.Combine(effectiveRoot,&quot;Data&quot;,&quot;FAQ_KnowledgeBase.xlsx&quot;)]</InArgument>
+              <OutArgument x:TypeArguments="sd:DataTable" x:Key="out_Table">[faq]</OutArgument>
+            </ui:InvokeWorkflowFile.Arguments>
+          </ui:InvokeWorkflowFile>
+          <ui:InvokeWorkflowFile DisplayName="LoadWorkbook" WorkflowFileName="[System.IO.Path.Combine(effectiveRoot, &quot;Workflows&quot;, &quot;LoadWorkbook.xaml&quot;)]">
+            <ui:InvokeWorkflowFile.Arguments>
+              <InArgument x:TypeArguments="x:String" x:Key="in_Path">[System.IO.Path.Combine(effectiveRoot,&quot;Data&quot;,&quot;Complaints_Log.xlsx&quot;)]</InArgument>
+              <OutArgument x:TypeArguments="sd:DataTable" x:Key="out_Table">[log]</OutArgument>
+            </ui:InvokeWorkflowFile.Arguments>
+          </ui:InvokeWorkflowFile>
+          <ui:InvokeCode DisplayName="Recover durable complaint audit" Language="VBNet" Code="Dim path = System.IO.Path.Combine(effectiveRoot,&quot;State&quot;,&quot;Audit.json&quot;) If System.IO.File.Exists(path) Then  Dim records = System.Text.Json.JsonSerializer.Deserialize(Of System.Collections.Generic.List(Of System.Collections.Generic.Dictionary(Of String,String)))(System.IO.File.ReadAllText(path))  log.Rows.Clear()  For Each item In records   Dim row = log.NewRow()   For Each col As System.Data.DataColumn In log.Columns    If item.ContainsKey(col.ColumnName) Then row(col) = item(col.ColumnName)   Next   log.Rows.Add(row)  Next End If">
+            <ui:InvokeCode.Arguments>
+              <InArgument x:TypeArguments="x:String" x:Key="effectiveRoot">[effectiveRoot]</InArgument>
+              <InOutArgument x:TypeArguments="sd:DataTable" x:Key="log">[log]</InOutArgument>
+            </ui:InvokeCode.Arguments>
+          </ui:InvokeCode>
+          <ui:InvokeWorkflowFile DisplayName="ReadGmail" WorkflowFileName="[System.IO.Path.Combine(effectiveRoot, &quot;Workflows&quot;, &quot;ReadGmail.xaml&quot;)]">
+            <ui:InvokeWorkflowFile.Arguments>
+              <InArgument x:TypeArguments="x:String" x:Key="in_ProjectRoot">[effectiveRoot]</InArgument>
+              <InArgument x:TypeArguments="x:Boolean" x:Key="in_UseSample">[sampleMode]</InArgument>
+              <InArgument x:TypeArguments="x:Object" x:Key="in_GmailEmails">[in_GmailEmails]</InArgument>
+              <OutArgument x:TypeArguments="scg:List(scg:Dictionary(x:String, x:String))" x:Key="out_Emails">[emails]</OutArgument>
+            </ui:InvokeWorkflowFile.Arguments>
+          </ui:InvokeWorkflowFile>
+          <ui:ForEach x:TypeArguments="scg:Dictionary(x:String, x:String)" Values="[emails]" DisplayName="Process every complaint independently">
+            <ui:ForEach.Body>
+              <ActivityAction x:TypeArguments="scg:Dictionary(x:String, x:String)">
+                <ActivityAction.Argument>
+                  <DelegateInArgument x:TypeArguments="scg:Dictionary(x:String, x:String)" Name="complaint"/>
+                </ActivityAction.Argument>
+                <Sequence>
+                  <ui:InvokeCode DisplayName="Skip previously audited IDs without blocking dry-run promotion" Language="VBNet" Code="skip = log.Rows.Cast(Of System.Data.DataRow)().Any(Function(r) Convert.ToString(r(&quot;GmailMessageID&quot;)) = complaint(&quot;GmailMessageID&quot;) AndAlso (Convert.ToString(r(&quot;Status&quot;)) = &quot;Sent&quot; OrElse (Not in_SendEnabled AndAlso New String(){&quot;DryRun&quot;,&quot;ManualReview&quot;,&quot;RouteUnconfigured&quot;}.Contains(Convert.ToString(r(&quot;Status&quot;))))))">
+                    <ui:InvokeCode.Arguments>
+                      <InArgument x:TypeArguments="sd:DataTable" x:Key="log">[log]</InArgument>
+                      <InArgument x:TypeArguments="scg:Dictionary(x:String, x:String)" x:Key="complaint">[complaint]</InArgument>
+                      <InArgument x:TypeArguments="x:Boolean" x:Key="in_SendEnabled">[in_SendEnabled]</InArgument>
+                      <OutArgument x:TypeArguments="x:Boolean" x:Key="skip">[skip]</OutArgument>
+                    </ui:InvokeCode.Arguments>
+                  </ui:InvokeCode>
+                  <If Condition="[Not skip]">
+                    <If.Then>
+                      <TryCatch>
+                        <TryCatch.Try>
+                          <Sequence>
+                            <ui:InvokeWorkflowFile DisplayName="ClassifyComplaint" WorkflowFileName="[System.IO.Path.Combine(effectiveRoot, &quot;Workflows&quot;, &quot;ClassifyComplaint.xaml&quot;)]">
+                              <ui:InvokeWorkflowFile.Arguments>
+                                <InArgument x:TypeArguments="x:String" x:Key="in_ProjectRoot">[effectiveRoot]</InArgument>
+                                <InArgument x:TypeArguments="scg:Dictionary(x:String, x:String)" x:Key="io_Complaint">[complaint]</InArgument>
+                                <InArgument x:TypeArguments="x:Boolean" x:Key="in_AIEnabled">[in_AIEnabled]</InArgument>
+                                <InArgument x:TypeArguments="x:Boolean" x:Key="in_AIApproved">[in_AIApproved]</InArgument>
+                              </ui:InvokeWorkflowFile.Arguments>
+                            </ui:InvokeWorkflowFile>
+                            <ui:InvokeWorkflowFile DisplayName="DeterminePriority" WorkflowFileName="[System.IO.Path.Combine(effectiveRoot, &quot;Workflows&quot;, &quot;DeterminePriority.xaml&quot;)]">
+                              <ui:InvokeWorkflowFile.Arguments>
+                                <InArgument x:TypeArguments="scg:Dictionary(x:String, x:String)" x:Key="io_Complaint">[complaint]</InArgument>
+                              </ui:InvokeWorkflowFile.Arguments>
+                            </ui:InvokeWorkflowFile>
+                            <ui:InvokeWorkflowFile DisplayName="FindDepartment" WorkflowFileName="[System.IO.Path.Combine(effectiveRoot, &quot;Workflows&quot;, &quot;FindDepartment.xaml&quot;)]">
+                              <ui:InvokeWorkflowFile.Arguments>
+                                <InArgument x:TypeArguments="scg:Dictionary(x:String, x:String)" x:Key="io_Complaint">[complaint]</InArgument>
+                                <InArgument x:TypeArguments="sd:DataTable" x:Key="in_Routing">[routes]</InArgument>
+                                <InArgument x:TypeArguments="scg:List(scg:Dictionary(x:String, x:String))" x:Key="in_AuthorizedRecipients">[authorized]</InArgument>
+                              </ui:InvokeWorkflowFile.Arguments>
+                            </ui:InvokeWorkflowFile>
+                            <ui:InvokeWorkflowFile DisplayName="GenerateResponse" WorkflowFileName="[System.IO.Path.Combine(effectiveRoot, &quot;Workflows&quot;, &quot;GenerateResponse.xaml&quot;)]">
+                              <ui:InvokeWorkflowFile.Arguments>
+                                <InArgument x:TypeArguments="scg:Dictionary(x:String, x:String)" x:Key="io_Complaint">[complaint]</InArgument>
+                                <InArgument x:TypeArguments="sd:DataTable" x:Key="in_FAQ">[faq]</InArgument>
+                              </ui:InvokeWorkflowFile.Arguments>
+                            </ui:InvokeWorkflowFile>
+                            <ui:InvokeWorkflowFile DisplayName="RouteComplaint" WorkflowFileName="[System.IO.Path.Combine(effectiveRoot, &quot;Workflows&quot;, &quot;RouteComplaint.xaml&quot;)]">
+                              <ui:InvokeWorkflowFile.Arguments>
+                                <InArgument x:TypeArguments="x:String" x:Key="in_ProjectRoot">[effectiveRoot]</InArgument>
+                                <InArgument x:TypeArguments="scg:Dictionary(x:String, x:String)" x:Key="io_Complaint">[complaint]</InArgument>
+                                <OutArgument x:TypeArguments="scg:List(scg:Dictionary(x:String, x:String))" x:Key="out_Actions">[actions]</OutArgument>
+                              </ui:InvokeWorkflowFile.Arguments>
+                            </ui:InvokeWorkflowFile>
+                            <ui:InvokeWorkflowFile DisplayName="LogComplaint" WorkflowFileName="[System.IO.Path.Combine(effectiveRoot, &quot;Workflows&quot;, &quot;LogComplaint.xaml&quot;)]">
+                              <ui:InvokeWorkflowFile.Arguments>
+                                <InArgument x:TypeArguments="x:String" x:Key="in_ProjectRoot">[effectiveRoot]</InArgument>
+                                <InArgument x:TypeArguments="scg:Dictionary(x:String, x:String)" x:Key="io_Complaint">[complaint]</InArgument>
+                                <InOutArgument x:TypeArguments="sd:DataTable" x:Key="in_Log">[log]</InOutArgument>
+                              </ui:InvokeWorkflowFile.Arguments>
+                            </ui:InvokeWorkflowFile>
+                            <ui:InvokeWorkflowFile DisplayName="SaveWorkbook" WorkflowFileName="[System.IO.Path.Combine(effectiveRoot, &quot;Workflows&quot;, &quot;SaveWorkbook.xaml&quot;)]">
+                              <ui:InvokeWorkflowFile.Arguments>
+                                <InArgument x:TypeArguments="x:String" x:Key="in_Path">[System.IO.Path.Combine(effectiveRoot,&quot;Output&quot;,&quot;Complaints_Log.xlsx&quot;)]</InArgument>
+                                <InArgument x:TypeArguments="sd:DataTable" x:Key="in_Table">[log]</InArgument>
+                              </ui:InvokeWorkflowFile.Arguments>
+                            </ui:InvokeWorkflowFile>
+                            <ui:InvokeWorkflowFile DisplayName="DispatchActions" WorkflowFileName="[System.IO.Path.Combine(effectiveRoot, &quot;Workflows&quot;, &quot;DispatchActions.xaml&quot;)]">
+                              <ui:InvokeWorkflowFile.Arguments>
+                                <InArgument x:TypeArguments="x:String" x:Key="in_ProjectRoot">[effectiveRoot]</InArgument>
+                                <InArgument x:TypeArguments="scg:Dictionary(x:String, x:String)" x:Key="io_Complaint">[complaint]</InArgument>
+                                <InArgument x:TypeArguments="scg:List(scg:Dictionary(x:String, x:String))" x:Key="in_Actions">[actions]</InArgument>
+                                <InArgument x:TypeArguments="x:Boolean" x:Key="in_SendEnabled">[in_SendEnabled]</InArgument>
+                              </ui:InvokeWorkflowFile.Arguments>
+                            </ui:InvokeWorkflowFile>
+                            <ui:InvokeWorkflowFile DisplayName="LogComplaint" WorkflowFileName="[System.IO.Path.Combine(effectiveRoot, &quot;Workflows&quot;, &quot;LogComplaint.xaml&quot;)]">
+                              <ui:InvokeWorkflowFile.Arguments>
+                                <InArgument x:TypeArguments="x:String" x:Key="in_ProjectRoot">[effectiveRoot]</InArgument>
+                                <InArgument x:TypeArguments="scg:Dictionary(x:String, x:String)" x:Key="io_Complaint">[complaint]</InArgument>
+                                <InOutArgument x:TypeArguments="sd:DataTable" x:Key="in_Log">[log]</InOutArgument>
+                              </ui:InvokeWorkflowFile.Arguments>
+                            </ui:InvokeWorkflowFile>
+                            <ui:InvokeWorkflowFile DisplayName="SaveWorkbook" WorkflowFileName="[System.IO.Path.Combine(effectiveRoot, &quot;Workflows&quot;, &quot;SaveWorkbook.xaml&quot;)]">
+                              <ui:InvokeWorkflowFile.Arguments>
+                                <InArgument x:TypeArguments="x:String" x:Key="in_Path">[System.IO.Path.Combine(effectiveRoot,&quot;Output&quot;,&quot;Complaints_Log.xlsx&quot;)]</InArgument>
+                                <InArgument x:TypeArguments="sd:DataTable" x:Key="in_Table">[log]</InArgument>
+                              </ui:InvokeWorkflowFile.Arguments>
+                            </ui:InvokeWorkflowFile>
+                          </Sequence>
+                        </TryCatch.Try>
+                        <TryCatch.Catches>
+                          <Catch x:TypeArguments="s:Exception">
+                            <ActivityAction x:TypeArguments="s:Exception">
+                              <ActivityAction.Argument>
+                                <DelegateInArgument x:TypeArguments="s:Exception" Name="caughtException"/>
+                              </ActivityAction.Argument>
+                              <Sequence>
+                                <ui:InvokeWorkflowFile DisplayName="HandleExceptions" WorkflowFileName="[System.IO.Path.Combine(effectiveRoot, &quot;Workflows&quot;, &quot;HandleExceptions.xaml&quot;)]">
+                                  <ui:InvokeWorkflowFile.Arguments>
+                                    <InArgument x:TypeArguments="x:String" x:Key="in_ProjectRoot">[effectiveRoot]</InArgument>
+                                    <InArgument x:TypeArguments="scg:Dictionary(x:String, x:String)" x:Key="io_Complaint">[complaint]</InArgument>
+                                    <InArgument x:TypeArguments="s:Exception" x:Key="in_Error">[caughtException]</InArgument>
+                                  </ui:InvokeWorkflowFile.Arguments>
+                                </ui:InvokeWorkflowFile>
+                                <ui:InvokeWorkflowFile DisplayName="LogComplaint" WorkflowFileName="[System.IO.Path.Combine(effectiveRoot, &quot;Workflows&quot;, &quot;LogComplaint.xaml&quot;)]">
+                                  <ui:InvokeWorkflowFile.Arguments>
+                                    <InArgument x:TypeArguments="x:String" x:Key="in_ProjectRoot">[effectiveRoot]</InArgument>
+                                    <InArgument x:TypeArguments="scg:Dictionary(x:String, x:String)" x:Key="io_Complaint">[complaint]</InArgument>
+                                    <InOutArgument x:TypeArguments="sd:DataTable" x:Key="in_Log">[log]</InOutArgument>
+                                  </ui:InvokeWorkflowFile.Arguments>
+                                </ui:InvokeWorkflowFile>
+                              </Sequence>
+                            </ActivityAction>
+                          </Catch>
+                        </TryCatch.Catches>
+                      </TryCatch>
+                    </If.Then>
+                  </If>
+                </Sequence>
+              </ActivityAction>
+            </ui:ForEach.Body>
+          </ui:ForEach>
+          <ui:InvokeWorkflowFile DisplayName="GeneratePriorityReport" WorkflowFileName="[System.IO.Path.Combine(effectiveRoot, &quot;Workflows&quot;, &quot;GeneratePriorityReport.xaml&quot;)]">
+            <ui:InvokeWorkflowFile.Arguments>
+              <InArgument x:TypeArguments="sd:DataTable" x:Key="in_Log">[log]</InArgument>
+              <OutArgument x:TypeArguments="sd:DataTable" x:Key="out_Report">[report]</OutArgument>
+            </ui:InvokeWorkflowFile.Arguments>
+          </ui:InvokeWorkflowFile>
+          <ui:InvokeWorkflowFile DisplayName="SaveWorkbook" WorkflowFileName="[System.IO.Path.Combine(effectiveRoot, &quot;Workflows&quot;, &quot;SaveWorkbook.xaml&quot;)]">
+            <ui:InvokeWorkflowFile.Arguments>
+              <InArgument x:TypeArguments="x:String" x:Key="in_Path">[System.IO.Path.Combine(effectiveRoot,&quot;Output&quot;,&quot;Priority_Report.xlsx&quot;)]</InArgument>
+              <InArgument x:TypeArguments="sd:DataTable" x:Key="in_Table">[report]</InArgument>
+            </ui:InvokeWorkflowFile.Arguments>
+          </ui:InvokeWorkflowFile>
+          <ui:InvokeWorkflowFile DisplayName="SaveWorkbook" WorkflowFileName="[System.IO.Path.Combine(effectiveRoot, &quot;Workflows&quot;, &quot;SaveWorkbook.xaml&quot;)]">
+            <ui:InvokeWorkflowFile.Arguments>
+              <InArgument x:TypeArguments="x:String" x:Key="in_Path">[System.IO.Path.Combine(effectiveRoot,&quot;Output&quot;,&quot;Complaints_Log.xlsx&quot;)]</InArgument>
+              <InArgument x:TypeArguments="sd:DataTable" x:Key="in_Table">[log]</InArgument>
+            </ui:InvokeWorkflowFile.Arguments>
+          </ui:InvokeWorkflowFile>
+        </Sequence>
+      </TryCatch.Try>
+      <TryCatch.Finally>
+        <ui:InvokeCode DisplayName="Release single run lock" Language="VBNet" Code="If lockHandle IsNot Nothing Then DirectCast(lockHandle, System.IDisposable).Dispose()">
+          <ui:InvokeCode.Arguments>
+            <InArgument x:TypeArguments="x:Object" x:Key="lockHandle">[lockHandle]</InArgument>
+          </ui:InvokeCode.Arguments>
+        </ui:InvokeCode>
+      </TryCatch.Finally>
+    </TryCatch>
+  </Sequence>
+</Activity>

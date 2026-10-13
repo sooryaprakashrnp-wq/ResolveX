@@ -1,0 +1,9 @@
+Output/
+State/
+.local/
+.objects/
+Config/SendApproval.json
+Config/AuthorizedRecipients.json
+Config/ManualReviewRecipients.json
+*.bak
+*.user
