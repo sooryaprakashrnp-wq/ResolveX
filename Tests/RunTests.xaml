@@ -1,0 +1,87 @@
+<?xml version="1.0" ?>
+<Activity xmlns="http://schemas.microsoft.com/netfx/2009/xaml/activities" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:ui="http://schemas.uipath.com/workflow/activities" xmlns:scg="clr-namespace:System.Collections.Generic;assembly=System.Private.CoreLib" xmlns:sd="clr-namespace:System.Data;assembly=System.Data.Common" xmlns:s="clr-namespace:System;assembly=System.Private.CoreLib" xmlns:sco="clr-namespace:System.Collections.ObjectModel;assembly=System.Private.CoreLib" x:Class="ResolveX_RunTests">
+  <x:Members>
+    <x:Property Name="in_ProjectRoot" Type="InArgument(x:String)"/>
+  </x:Members>
+  <TextExpression.NamespacesForImplementation>
+    <sco:Collection x:TypeArguments="x:String">
+      <x:String>System</x:String>
+      <x:String>System.Data</x:String>
+      <x:String>System.Collections.Generic</x:String>
+      <x:String>System.Linq</x:String>
+      <x:String>System.IO</x:String>
+      <x:String>System.Text.Json</x:String>
+    </sco:Collection>
+  </TextExpression.NamespacesForImplementation>
+  <TextExpression.ReferencesForImplementation>
+    <sco:Collection x:TypeArguments="AssemblyReference">
+      <AssemblyReference>System.Private.CoreLib</AssemblyReference>
+      <AssemblyReference>System.Data.Common</AssemblyReference>
+      <AssemblyReference>System.Linq</AssemblyReference>
+      <AssemblyReference>System.Text.Json</AssemblyReference>
+      <AssemblyReference>System.IO.Compression</AssemblyReference>
+      <AssemblyReference>System.IO.Compression.ZipFile</AssemblyReference>
+      <AssemblyReference>System.Xml.XDocument</AssemblyReference>
+      <AssemblyReference>System.Net.Http</AssemblyReference>
+      <AssemblyReference>System.Net.Mail</AssemblyReference>
+      <AssemblyReference>System.Net.Primitives</AssemblyReference>
+      <AssemblyReference>System.Security.Cryptography</AssemblyReference>
+      <AssemblyReference>System.Text.RegularExpressions</AssemblyReference>
+      <AssemblyReference>System.Runtime</AssemblyReference>
+      <AssemblyReference>System.Collections</AssemblyReference>
+      <AssemblyReference>Microsoft.VisualBasic.Core</AssemblyReference>
+    </sco:Collection>
+  </TextExpression.ReferencesForImplementation>
+  <Sequence DisplayName="RunTests">
+    <Sequence.Variables>
+      <Variable x:TypeArguments="x:String" Name="effectiveRoot"/>
+      <Variable x:TypeArguments="sd:DataTable" Name="log"/>
+      <Variable x:TypeArguments="sd:DataTable" Name="report"/>
+    </Sequence.Variables>
+    <ui:InvokeCode DisplayName="Require isolated fresh sample test folder" Language="VBNet" Code="effectiveRoot = If(String.IsNullOrWhiteSpace(in_ProjectRoot), System.IO.Directory.GetCurrentDirectory(), in_ProjectRoot) If System.IO.Directory.Exists(System.IO.Path.Combine(effectiveRoot,&quot;State&quot;)) Then Throw New InvalidOperationException(&quot;Use a fresh extracted copy for tests to avoid live or prior state.&quot;)">
+      <ui:InvokeCode.Arguments>
+        <InArgument x:TypeArguments="x:String" x:Key="in_ProjectRoot">[in_ProjectRoot]</InArgument>
+        <OutArgument x:TypeArguments="x:String" x:Key="effectiveRoot">[effectiveRoot]</OutArgument>
+      </ui:InvokeCode.Arguments>
+    </ui:InvokeCode>
+    <ui:InvokeWorkflowFile DisplayName="Run sample controller" WorkflowFileName="[System.IO.Path.Combine(effectiveRoot, &quot;Main.xaml&quot;)]">
+      <ui:InvokeWorkflowFile.Arguments>
+        <InArgument x:TypeArguments="x:String" x:Key="in_ProjectRoot">[effectiveRoot]</InArgument>
+        <InArgument x:TypeArguments="x:Boolean" x:Key="in_UseSample">[True]</InArgument>
+        <InArgument x:TypeArguments="x:Object" x:Key="in_GmailEmails">[Nothing]</InArgument>
+        <InArgument x:TypeArguments="x:Boolean" x:Key="in_SendEnabled">[False]</InArgument>
+        <InArgument x:TypeArguments="x:Boolean" x:Key="in_AIEnabled">[False]</InArgument>
+        <InArgument x:TypeArguments="x:Boolean" x:Key="in_AIApproved">[False]</InArgument>
+      </ui:InvokeWorkflowFile.Arguments>
+    </ui:InvokeWorkflowFile>
+    <ui:InvokeWorkflowFile DisplayName="Run sample controller" WorkflowFileName="[System.IO.Path.Combine(effectiveRoot, &quot;Main.xaml&quot;)]">
+      <ui:InvokeWorkflowFile.Arguments>
+        <InArgument x:TypeArguments="x:String" x:Key="in_ProjectRoot">[effectiveRoot]</InArgument>
+        <InArgument x:TypeArguments="x:Boolean" x:Key="in_UseSample">[True]</InArgument>
+        <InArgument x:TypeArguments="x:Object" x:Key="in_GmailEmails">[Nothing]</InArgument>
+        <InArgument x:TypeArguments="x:Boolean" x:Key="in_SendEnabled">[False]</InArgument>
+        <InArgument x:TypeArguments="x:Boolean" x:Key="in_AIEnabled">[False]</InArgument>
+        <InArgument x:TypeArguments="x:Boolean" x:Key="in_AIApproved">[False]</InArgument>
+      </ui:InvokeWorkflowFile.Arguments>
+    </ui:InvokeWorkflowFile>
+    <ui:InvokeWorkflowFile DisplayName="LoadWorkbook" WorkflowFileName="[System.IO.Path.Combine(effectiveRoot, &quot;Workflows&quot;, &quot;LoadWorkbook.xaml&quot;)]">
+      <ui:InvokeWorkflowFile.Arguments>
+        <InArgument x:TypeArguments="x:String" x:Key="in_Path">[System.IO.Path.Combine(effectiveRoot,&quot;Output&quot;,&quot;Complaints_Log.xlsx&quot;)]</InArgument>
+        <OutArgument x:TypeArguments="sd:DataTable" x:Key="out_Table">[log]</OutArgument>
+      </ui:InvokeWorkflowFile.Arguments>
+    </ui:InvokeWorkflowFile>
+    <ui:InvokeWorkflowFile DisplayName="LoadWorkbook" WorkflowFileName="[System.IO.Path.Combine(effectiveRoot, &quot;Workflows&quot;, &quot;LoadWorkbook.xaml&quot;)]">
+      <ui:InvokeWorkflowFile.Arguments>
+        <InArgument x:TypeArguments="x:String" x:Key="in_Path">[System.IO.Path.Combine(effectiveRoot,&quot;Output&quot;,&quot;Priority_Report.xlsx&quot;)]</InArgument>
+        <OutArgument x:TypeArguments="sd:DataTable" x:Key="out_Table">[report]</OutArgument>
+      </ui:InvokeWorkflowFile.Arguments>
+    </ui:InvokeWorkflowFile>
+    <ui:InvokeCode DisplayName="Assert demonstrated routes, idempotency and no sends" Language="VBNet" Code="If log.Rows.Count &lt;&gt; 13 Then Throw New InvalidOperationException(&quot;Expected 13 unique sample complaints after repeat run&quot;) Dim expected As String()() = {  New String(){&quot;demo-001&quot;,&quot;Flipkart&quot;,&quot;Order/Delivery&quot;,&quot;Order Support&quot;},  New String(){&quot;demo-002&quot;,&quot;Samsung&quot;,&quot;Warranty&quot;,&quot;Warranty and Service&quot;},  New String(){&quot;demo-003&quot;,&quot;Amazon&quot;,&quot;Refund&quot;,&quot;Payments and Refunds&quot;},  New String(){&quot;demo-004&quot;,&quot;Airtel&quot;,&quot;Technical&quot;,&quot;Technical Support&quot;},  New String(){&quot;demo-005&quot;,&quot;Unknown&quot;,&quot;Returns&quot;,&quot;Manual Review&quot;}} For Each e In expected  Dim rows = log.Rows.Cast(Of System.Data.DataRow)().Where(Function(r) Convert.ToString(r(&quot;GmailMessageID&quot;)) = e(0)).ToArray()  If rows.Length &lt;&gt; 1 Then Throw New InvalidOperationException(&quot;Duplicate or missing sample ID&quot;)  If Convert.ToString(rows(0)(&quot;Organization&quot;)) &lt;&gt; e(1) OrElse Convert.ToString(rows(0)(&quot;Category&quot;)) &lt;&gt; e(2) OrElse Convert.ToString(rows(0)(&quot;Department&quot;)) &lt;&gt; e(3) Then Throw New InvalidOperationException(&quot;Demo scenario failed: &quot; &amp; e(0)) Next If report.Rows.Count &lt;&gt; 5 Then Throw New InvalidOperationException(&quot;Expected top five outstanding complaints&quot;) If Convert.ToString(report.Rows(0)(&quot;Priority&quot;)) &lt;&gt; &quot;Critical&quot; OrElse Convert.ToString(report.Rows(1)(&quot;Priority&quot;)) &lt;&gt; &quot;High&quot; Then Throw New InvalidOperationException(&quot;Priority ranking failed&quot;) If System.IO.Directory.Exists(System.IO.Path.Combine(effectiveRoot,&quot;State&quot;,&quot;Dispatch&quot;)) Then Throw New InvalidOperationException(&quot;Sample must never attempt sending&quot;) System.IO.File.WriteAllText(System.IO.Path.Combine(effectiveRoot,&quot;Output&quot;,&quot;SampleTests.txt&quot;),&quot;PASS: five demonstration routes, duplicate prevention, 13 audit rows, top-five priority, no sends. &quot; &amp; DateTime.UtcNow.ToString(&quot;o&quot;))">
+      <ui:InvokeCode.Arguments>
+        <InArgument x:TypeArguments="x:String" x:Key="effectiveRoot">[effectiveRoot]</InArgument>
+        <InArgument x:TypeArguments="sd:DataTable" x:Key="log">[log]</InArgument>
+        <InArgument x:TypeArguments="sd:DataTable" x:Key="report">[report]</InArgument>
+      </ui:InvokeCode.Arguments>
+    </ui:InvokeCode>
+  </Sequence>
+</Activity>
