@@ -4,7 +4,7 @@
 
 **Needs your existing project to finish:** native Google Workspace Gmail read/send adapter binding. Your local ResolveX_Automation/project.json, Main.xaml and ClassifyComplaint.xaml were not available in this environment. Installed Google Workspace version and connection metadata could not be inspected. No connection was copied, recreated or overwritten. ReadGmail accepts the installed Get Email List output. SendGmail deliberately fails closed until a native activity is added with your existing connection. This ZIP is not a finished live Gmail deployment.
 
-**GitHub upload:** rejected with 403 Resource not accessible by integration, despite repository owner push permission. Reconnect the GitHub app with ResolveX selected and Contents read/write. No remote files were created or changed.
+**GitHub upload:** project source and downloadable ZIP were uploaded through the authorized GitHub browser session on 2026-10-13. Earlier connector writes were rejected with 403; the browser upload succeeded.
 
 ## Start the local sample prototype
 1. Extract the ZIP. Keep the whole ResolveX_Hackathon folder together.
@@ -36,4 +36,4 @@ The ten requested workflows and six helpers are in Workflows plus Main.xaml. Ful
 Run only one controller per project folder. A file lock enforces this in Main. Use separate copies for independent organizations if sharing the workstation. Local allowlists are a prototype control, not enterprise role-based access control.
 
 ## Upload alternative
-Tools/Upload-ToGitHub.ps1 can be run on your computer with Git, GitHub CLI and an authenticated account. It inspects write access, preserves existing files, validates the clean demo payload and uploads to main only if the repository is empty; otherwise it creates a separate branch and draft PR. It requires Python for upload preflight only. It was not executed here. Reconnecting the ChatGPT GitHub integration is the preferred way for me to complete the upload.
+Tools/Upload-ToGitHub.ps1 can be run on your computer with Git, GitHub CLI and an authenticated account. It inspects write access, preserves existing files, validates the clean demo payload and uploads to main only if the repository is empty; otherwise it creates a separate branch and draft PR. It requires Python for upload preflight only. It was not executed here. The prepared project is already uploaded to this repository.
