@@ -1,0 +1,100 @@
+[
+  {
+    "GmailMessageID": "demo-001",
+    "CustomerEmail": "customer@example.invalid",
+    "Subject": "Demo complaint 1",
+    "ComplaintText": "My Flipkart order has not been delivered.",
+    "ReceivedDate": "2026-10-13T00:00:00Z"
+  },
+  {
+    "GmailMessageID": "demo-002",
+    "CustomerEmail": "customer@example.invalid",
+    "Subject": "Demo complaint 2",
+    "ComplaintText": "My Samsung phone is under warranty but the screen stopped working.",
+    "ReceivedDate": "2026-10-13T01:00:00Z"
+  },
+  {
+    "GmailMessageID": "demo-003",
+    "CustomerEmail": "customer@example.invalid",
+    "Subject": "Demo complaint 3",
+    "ComplaintText": "I cancelled my Amazon order but my refund has not arrived.",
+    "ReceivedDate": "2026-10-13T02:00:00Z"
+  },
+  {
+    "GmailMessageID": "demo-004",
+    "CustomerEmail": "customer@example.invalid",
+    "Subject": "Demo complaint 4",
+    "ComplaintText": "My Airtel internet connection is not working.",
+    "ReceivedDate": "2026-10-13T03:00:00Z"
+  },
+  {
+    "GmailMessageID": "demo-005",
+    "CustomerEmail": "customer@example.invalid",
+    "Subject": "Demo complaint 5",
+    "ComplaintText": "My product is damaged and nobody is helping.",
+    "ReceivedDate": "2026-10-13T04:00:00Z"
+  },
+  {
+    "GmailMessageID": "demo-006",
+    "CustomerEmail": "customer@example.invalid",
+    "Subject": "Demo complaint 6",
+    "ComplaintText": "My Jio account has a security breach and unauthorized transaction.",
+    "ReceivedDate": "2026-10-13T05:00:00Z"
+  },
+  {
+    "GmailMessageID": "demo-007",
+    "CustomerEmail": "customer@example.invalid",
+    "Subject": "Demo complaint 7",
+    "ComplaintText": "My Swiggy delivery is delayed.",
+    "ReceivedDate": "2026-10-13T00:00:00Z"
+  },
+  {
+    "GmailMessageID": "demo-008",
+    "CustomerEmail": "customer@example.invalid",
+    "Subject": "Demo complaint 8",
+    "ComplaintText": "My Zomato payment deducted after a failed transaction.",
+    "ReceivedDate": "2026-10-13T01:00:00Z"
+  },
+  {
+    "GmailMessageID": "demo-009",
+    "CustomerEmail": "customer@example.invalid",
+    "Subject": "Demo complaint 9",
+    "ComplaintText": "My Meesho parcel contains a wrong item.",
+    "ReceivedDate": "2026-10-13T02:00:00Z"
+  },
+  {
+    "GmailMessageID": "demo-010",
+    "CustomerEmail": "customer@example.invalid",
+    "Subject": "Demo complaint 10",
+    "ComplaintText": "Amazon and Flipkart are mentioned in my complaint.",
+    "ReceivedDate": "2026-10-13T03:00:00Z"
+  },
+  {
+    "GmailMessageID": "demo-011",
+    "CustomerEmail": "customer@example.invalid",
+    "Subject": "Demo complaint 11",
+    "ComplaintText": "My Samsung repair and refund are pending.",
+    "ReceivedDate": "2026-10-13T04:00:00Z"
+  },
+  {
+    "GmailMessageID": "demo-012",
+    "CustomerEmail": "customer@example.invalid",
+    "Subject": "Demo complaint 12",
+    "ComplaintText": "Thank you Airtel, my internet issue is resolved.",
+    "ReceivedDate": "2026-10-13T05:00:00Z"
+  },
+  {
+    "GmailMessageID": "demo-013",
+    "CustomerEmail": "customer@example.invalid",
+    "Subject": "Demo complaint 13",
+    "ComplaintText": "",
+    "ReceivedDate": "2026-10-13T00:00:00Z"
+  },
+  {
+    "GmailMessageID": "demo-001",
+    "CustomerEmail": "customer@example.invalid",
+    "Subject": "Demo complaint 1",
+    "ComplaintText": "My Flipkart order has not been delivered.",
+    "ReceivedDate": "2026-10-13T00:00:00Z"
+  }
+]
